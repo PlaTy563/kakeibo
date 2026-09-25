@@ -47,9 +47,14 @@ Apps Script エディタで `Code.gs` を `gas/Code.gs` の内容に置き換え
 
 ### 3. GitHub Pages を有効化
 
+`.github/workflows/pages.yml` を追加済みなので、push するたびに自動でビルド・公開されます。
+最初の1回だけ、公開方法を選ぶ操作が必要です。
+
 1. リポジトリの **Settings** → **Pages** を開く
-2. **Branch** をこのファイル一式が入っているブランチ（例: `main`）、フォルダを `/ (root)` にして **Save**
-3. 数分後に `https://<ユーザー名>.github.io/<リポジトリ名>/` が公開されます
+2. **Source** を **GitHub Actions** に変更（ブランチ/フォルダ選択の代わり）
+3. `claude/adoring-faraday-ma3h0m` ブランチに push すると、Actionsタブでワークフローが実行され、
+   数分後に `https://<ユーザー名>.github.io/<リポジトリ名>/` が公開されます
+4. （後で `main` にマージした場合も、そのpushで自動的に再公開されます）
 
 ### 4. スマホでホーム画面に追加
 
