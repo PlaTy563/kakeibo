@@ -5,8 +5,19 @@
  * 変更したら Apps Script エディタにも同じ内容を貼り付けて
  * 「デプロイ」→「デプロイを管理」→ 新バージョンとして再デプロイしてください。
  */
+// 外部（GitHub Pages / KWGTウィジェット）からのアクセスを絞るためのキー。
+// 「アクセスできるユーザー：全員」でデプロイするため、URLを知っていれば
+// 誰でも叩けてしまうのを防ぐための簡易チェック（強固な認証ではありません）。
+const ACCESS_KEY = 'dd9cc131a5fa196f6d210e3ec6722668';
+
 function doGet(e) {
   const params = (e && e.parameter) || {};
+
+  // 0. アクセスキーチェック（全リクエスト共通）
+  if (params.key !== ACCESS_KEY) {
+    return ContentService.createTextOutput(JSON.stringify({ error: 'unauthorized' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 
   // 1. Androidウィジェット(KWGT)からのAPIリクエスト判定
   if (params.type === 'widget') {

@@ -163,9 +163,37 @@
     .tag-method { background: var(--blue-subtle); color: var(--blue); }
     .detail-note { font-size: 0.72rem; color: var(--text-muted); background: #f0f4f2; padding: 4px 8px; border-radius: 6px; margin-top: 1px; }
     .empty-state { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 0.85rem; }
+
+    .lock-overlay {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 18px; z-index: 200; padding: 24px; text-align: center;
+    }
+    .lock-overlay.hidden { display: none; }
+    .lock-icon {
+      width: 72px; height: 72px; border-radius: 50%; background: var(--forest-subtle);
+      display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
+    }
+    .lock-title { font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
+    .lock-sub { font-size: 0.8rem; color: var(--text-muted); max-width: 260px; line-height: 1.5; }
+    .lock-btn {
+      background: var(--forest); color: #fff; border: none; border-radius: 14px;
+      padding: 14px 28px; font-size: 0.92rem; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(33, 104, 76, 0.2);
+    }
+    .lock-btn:active { transform: scale(0.97); background: #1a533d; }
+    .lock-error { font-size: 0.75rem; color: var(--danger); min-height: 1em; }
   </style>
 </head>
 <body>
+
+  <div class="lock-overlay" id="lockOverlay">
+    <div class="lock-icon">🔒</div>
+    <div class="lock-title">指紋・顔認証でロック解除</div>
+    <div class="lock-sub">この端末に登録した指紋やFace ID / 画面ロックで、支出・予算データを開きます</div>
+    <button class="lock-btn" id="lockBtn" onclick="unlockApp()">指紋 / Face IDで開く</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
 
   <header>
     <div class="month-picker">
@@ -255,6 +283,85 @@
   <script>
     // ★GASのWebアプリURL（末尾が /exec のもの）
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzzmdJuc6UmsjA8k9FOi860Mv4e86DBpyglirvngFhKeJ4st0ZoVmEfl9jCY3XvXMRu/exec";
+    // GAS側 ACCESS_KEY と同じ値（gas/Code.gs 参照）
+    const ACCESS_KEY = "dd9cc131a5fa196f6d210e3ec6722668";
+
+    const WEBAUTHN_CRED_KEY = 'kakeibo_webauthn_cred_id';
+    const WEBAUTHN_SUPPORTED = !!(window.PublicKeyCredential && navigator.credentials);
+
+    function bufToB64(buf) {
+      return btoa(String.fromCharCode.apply(null, new Uint8Array(buf)));
+    }
+    function b64ToBuf(b64) {
+      const bin = atob(b64);
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return arr.buffer;
+    }
+
+    // 初回のみ：この端末の指紋/Face IDを新規登録
+    async function registerBiometric() {
+      const cred = await navigator.credentials.create({
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          rp: { name: '支出・予算進捗' },
+          user: {
+            id: crypto.getRandomValues(new Uint8Array(16)),
+            name: 'owner',
+            displayName: '家計簿オーナー'
+          },
+          pubKeyCredParams: [
+            { type: 'public-key', alg: -7 },
+            { type: 'public-key', alg: -257 }
+          ],
+          authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+          timeout: 60000,
+          attestation: 'none'
+        }
+      });
+      localStorage.setItem(WEBAUTHN_CRED_KEY, bufToB64(cred.rawId));
+    }
+
+    // 2回目以降：登録済みの指紋/Face IDで解錠
+    async function verifyBiometric(credIdB64) {
+      await navigator.credentials.get({
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          allowCredentials: [{ id: b64ToBuf(credIdB64), type: 'public-key' }],
+          userVerification: 'required',
+          timeout: 60000
+        }
+      });
+    }
+
+    async function unlockApp() {
+      const errEl = document.getElementById('lockError');
+      errEl.textContent = '';
+
+      if (!WEBAUTHN_SUPPORTED) {
+        // 生体認証に対応していない端末（PCなど）ではロックをスキップ
+        hideLockScreen();
+        return;
+      }
+
+      try {
+        const savedId = localStorage.getItem(WEBAUTHN_CRED_KEY);
+        if (savedId) {
+          await verifyBiometric(savedId);
+        } else {
+          await registerBiometric();
+        }
+        hideLockScreen();
+      } catch (err) {
+        console.warn('Biometric auth failed:', err);
+        errEl.textContent = '認証に失敗しました。もう一度お試しください';
+      }
+    }
+
+    function hideLockScreen() {
+      document.getElementById('lockOverlay').classList.add('hidden');
+      fetchData('2026年9月');
+    }
 
     let currentYear = 2026;
     let currentMonth = 9;
@@ -417,7 +524,7 @@
       if (!ymStr) ymStr = currentYear + '年' + currentMonth + '月';
       document.getElementById('updateTime').textContent = '同期中...';
 
-      fetch(GAS_API_URL + '?month=' + encodeURIComponent(ymStr))
+      fetch(GAS_API_URL + '?month=' + encodeURIComponent(ymStr) + '&key=' + encodeURIComponent(ACCESS_KEY))
         .then(function(res) { return res.json(); })
         .then(function(data) {
           render(data);
@@ -428,10 +535,8 @@
         });
     }
 
-    // 初回ロード
+    // 初回ロード（データ取得はロック解除後に行う）
     window.addEventListener('DOMContentLoaded', function() {
-      fetchData('2026年9月');
-
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(function(err) {
           console.warn('SW registration failed:', err);
