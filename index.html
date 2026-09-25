@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <!-- 全画面PWA対応メタタグ（GitHubドメインなので完璧に全画面化します） -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="家計簿">
+  <meta name="theme-color" content="#f4f6f5">
+  <meta name="description" content="支出・予算進捗ダッシュボード">
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <title>支出・予算進捗</title>
+  <style>
+    :root {
+      --bg: #f4f6f5;
+      --card-bg: #ffffff;
+      --card-border: #eef0ef;
+      --forest: #21684c;
+      --forest-light: #5b947c;
+      --forest-subtle: #e8f2ed;
+      --text-main: #1f2923;
+      --text-sub: #7b8a82;
+      --text-muted: #8c9b93;
+      --blue: #457b9d;
+      --blue-subtle: #e8f0f5;
+      --warning: #cca43b;
+      --danger: #d97736;
+      --danger-subtle: #fbeee8;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text-main); padding: 14px 16px 80px 16px; max-width: 440px; margin: 0 auto; min-height: 100vh; }
+
+    header { padding: 4px 2px 14px 2px; display: flex; justify-content: space-between; align-items: center; }
+    .month-picker { display: flex; align-items: center; gap: 4px; }
+    .month-btn {
+      background: none; border: none; color: var(--forest); font-size: 1.4rem; cursor: pointer;
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px;
+    }
+    .month-btn:active { background: var(--forest-subtle); }
+    .month-label { font-size: 1.25rem; font-weight: 800; color: var(--text-main); padding: 0 4px; }
+    .sync-status { font-size: 0.75rem; color: var(--text-muted); }
+
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .kpi-card {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
+      padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.15s ease;
+    }
+    .kpi-card:active { transform: scale(0.98); }
+    .kpi-title { font-size: 0.75rem; color: var(--text-sub); margin-bottom: 6px; }
+    .kpi-amount { font-size: 1.45rem; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+    .kpi-sub { font-size: 0.7rem; color: var(--text-muted); }
+
+    .main-section-card {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px;
+      padding: 18px 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.025);
+    }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .section-title { font-size: 1rem; font-weight: 800; color: var(--text-main); }
+    .section-tip { font-size: 0.72rem; color: var(--forest); font-weight: 600; }
+
+    .cat-item { padding: 12px 0; border-bottom: 1px solid #f0f2f1; cursor: pointer; }
+    .cat-item:last-child { border-bottom: none; padding-bottom: 4px; }
+    .cat-item:first-child { padding-top: 4px; }
+    .cat-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+    .cat-name-box { display: flex; align-items: center; gap: 6px; }
+    .cat-name { font-size: 0.92rem; font-weight: 700; color: #2d3732; }
+    .cat-arrow { font-size: 0.85rem; color: #b0beb7; }
+    .cat-nums { font-size: 0.8rem; color: var(--text-sub); }
+
+    .cat-track { background: #edf1ef; border-radius: 8px; height: 7px; overflow: hidden; margin-bottom: 6px; }
+    .cat-fill { height: 100%; border-radius: 8px; transition: width 0.3s ease; }
+    .cat-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; }
+    .badge { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
+
+    .insight-card {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px;
+      padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.025);
+    }
+    .insight-row { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+    .insight-tag-line { display: flex; align-items: center; gap: 8px; }
+    .insight-tag { font-size: 0.65rem; font-weight: 800; color: #fff; padding: 2px 7px; border-radius: 6px; }
+    .tag-danger { background: var(--danger); }
+    .tag-ok { background: var(--forest); }
+    .insight-text { font-size: 0.82rem; font-weight: 700; color: #2d3732; }
+    .insight-sub { font-size: 0.72rem; color: var(--text-muted); padding-left: 2px; }
+
+    .sync-action-btn {
+      width: 100%; background: var(--forest); color: #fff; border: none; border-radius: 14px;
+      padding: 14px; font-size: 0.92rem; font-weight: 700; cursor: pointer; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(33, 104, 76, 0.2);
+    }
+    .sync-action-btn:active { transform: scale(0.985); background: #1a533d; }
+
+    .sheet-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(4px); z-index: 100;
+      opacity: 0; pointer-events: none; transition: opacity 0.28s ease;
+    }
+    .sheet-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .bottom-sheet {
+      position: fixed; left: 0; right: 0; bottom: 0; max-width: 460px; margin: 0 auto;
+      height: 82vh; background: #ffffff;
+      border-top-left-radius: 24px; border-top-right-radius: 24px;
+      border: 1px solid #e5eae7; border-bottom: none; z-index: 101;
+      display: flex; flex-direction: column; transform: translateY(100%);
+      transition: transform 0.32s cubic-bezier(0.33, 1, 0.68, 1);
+      box-shadow: 0 -10px 35px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+    .sheet-overlay.active .bottom-sheet { transform: translateY(0); }
+    .sheet-handle-bar { width: 100%; display: flex; justify-content: center; padding: 10px 0 4px 0; flex-shrink: 0; }
+    .sheet-handle { width: 36px; height: 4px; border-radius: 4px; background: #d0dad4; }
+
+    .sheet-header { padding: 8px 20px 12px 20px; border-bottom: 1px solid #eef2f0; flex-shrink: 0; }
+    .sheet-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+    .sheet-title { font-size: 1.15rem; font-weight: 800; color: var(--text-main); }
+    .sheet-close-btn {
+      background: #f0f4f2; border: none; color: var(--text-sub);
+      border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sheet-summary { font-size: 0.78rem; color: var(--forest); font-weight: 600; }
+
+    .sort-bar {
+      display: flex; gap: 6px; padding: 10px 18px; background: #ffffff;
+      overflow-x: auto; border-bottom: 1px solid #eef2f0; scrollbar-width: none;
+      flex-shrink: 0; position: relative; z-index: 2;
+    }
+    .sort-bar::-webkit-scrollbar { display: none; }
+    .sort-chip {
+      background: #f2f5f4; border: 1px solid #e3e8e5; color: var(--text-sub);
+      border-radius: 20px; padding: 6px 12px; font-size: 0.72rem; white-space: nowrap;
+      cursor: pointer; font-weight: 600;
+    }
+    .sort-chip.active { background: var(--forest); border-color: var(--forest); color: #fff; }
+
+    .sheet-body {
+      padding: 14px 18px 36px 18px; overflow-y: auto; flex: 1;
+      display: flex; flex-direction: column; gap: 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .detail-item {
+      background: #fafbfb; border: 1px solid #edf1ef;
+      border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 5px;
+      flex-shrink: 0;
+    }
+    .detail-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .detail-store { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
+    .detail-amount { font-size: 1.05rem; font-weight: 800; color: var(--forest); }
+    .detail-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: var(--text-sub); }
+    .detail-tags { display: flex; gap: 5px; align-items: center; }
+    .tag { padding: 2px 7px; border-radius: 5px; font-size: 0.65rem; background: #eef2f0; color: #5c6f66; font-weight: 600; }
+    .tag-subcat { background: var(--forest-subtle); color: var(--forest); }
+    .tag-method { background: var(--blue-subtle); color: var(--blue); }
+    .detail-note { font-size: 0.72rem; color: var(--text-muted); background: #f0f4f2; padding: 4px 8px; border-radius: 6px; margin-top: 1px; }
+    .empty-state { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="month-picker">
+      <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+      <div class="month-label" id="currentMonthLabel">2026年 9月</div>
+      <button class="month-btn" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="sync-status" id="updateTime">読み込み中...</div>
+  </header>
+
+  <div class="kpi-grid">
+    <div class="kpi-card" onclick="openCategorySheet('総支出')">
+      <div class="kpi-title">残り生活予算</div>
+      <div class="kpi-amount" id="heroRemaining" style="color: var(--forest);">¥--</div>
+      <div class="kpi-sub" id="heroUsageBadge">消化率 --%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">生活費実績</div>
+      <div class="kpi-amount" id="heroActual">¥--</div>
+      <div class="kpi-sub">予算 <span id="heroBudget">¥98,000</span></div>
+    </div>
+    <div class="kpi-card" onclick="openCategorySheet('総支出')">
+      <div class="kpi-title">総支出（旅行込）</div>
+      <div class="kpi-amount" id="totalOutflow">¥--</div>
+      <div class="kpi-sub">全出費合計</div>
+    </div>
+    <div class="kpi-card" onclick="openCategorySheet('特別費')">
+      <div class="kpi-title">特別費（伊勢旅行）</div>
+      <div class="kpi-amount" id="specialActual" style="color: var(--blue);">¥--</div>
+      <div class="kpi-sub" id="specialSub">宿泊・駐車場</div>
+    </div>
+  </div>
+
+  <div class="main-section-card">
+    <div class="section-header">
+      <div class="section-title">予算消化と内訳</div>
+      <div class="section-tip">項目タップで明細 ›</div>
+    </div>
+    <div class="cat-list" id="categoryList"></div>
+  </div>
+
+  <div class="insight-card">
+    <div class="section-header" style="margin-bottom: 6px;">
+      <div class="section-title">今月の気づき</div>
+      <div class="section-tip" style="color: var(--text-muted); cursor: pointer;" onclick="openCategorySheet('食費')">詳しく見る ›</div>
+    </div>
+    <div class="insight-row">
+      <div class="insight-tag-line">
+        <span class="insight-tag tag-danger" id="insightTag1">予算注意</span>
+        <span class="insight-text" id="insightTitle1">食費が予算を ¥269 超過しています</span>
+      </div>
+      <div class="insight-sub" id="insightSub1">外食（6件 ¥6,107）の割合が前週より上昇傾向</div>
+    </div>
+    <div class="insight-row" style="margin-top: 12px;">
+      <div class="insight-tag-line">
+        <span class="insight-tag tag-ok">ペース順調</span>
+        <span class="insight-text" id="insightTitle2">自由費は予算内（残り ¥8,545）で推移中</span>
+      </div>
+      <div class="insight-sub">日用品・衣服費の支出が計画通りに収まっています</div>
+    </div>
+  </div>
+
+  <button class="sync-action-btn" onclick="fetchData()">⟳ スプレッドシートと再同期</button>
+
+  <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet(event)">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle-bar"><div class="sheet-handle"></div></div>
+      <div class="sheet-header">
+        <div class="sheet-header-top">
+          <div class="sheet-title" id="sheetCategoryName">内訳</div>
+          <button class="sheet-close-btn" onclick="closeSheet()">✕</button>
+        </div>
+        <div class="sheet-summary" id="sheetSummaryText">-- • 合計: ¥0 / 0件</div>
+      </div>
+
+      <div class="sort-bar">
+        <button class="sort-chip active" data-sort="date-desc" onclick="setSort('date-desc')">日付 (新→旧)</button>
+        <button class="sort-chip" data-sort="date-asc" onclick="setSort('date-asc')">日付 (旧→新)</button>
+        <button class="sort-chip" data-sort="amt-desc" onclick="setSort('amt-desc')">金額 (高→安)</button>
+        <button class="sort-chip" data-sort="amt-asc" onclick="setSort('amt-asc')">金額 (安→高)</button>
+      </div>
+
+      <div class="sheet-body" id="sheetBody"></div>
+    </div>
+  </div>
+
+  <script>
+    // ★GASのWebアプリURL（末尾が /exec のもの）
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzzmdJuc6UmsjA8k9FOi860Mv4e86DBpyglirvngFhKeJ4st0ZoVmEfl9jCY3XvXMRu/exec";
+
+    let currentYear = 2026;
+    let currentMonth = 9;
+    let currentSelectedCat = '';
+    let currentSortMode = 'date-desc';
+    let currentData = null;
+
+    function formatYen(num) { return '¥' + Math.round(num || 0).toLocaleString('ja-JP'); }
+
+    function changeMonth(delta) {
+      currentMonth += delta;
+      if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+      else if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+
+      const ymStr = currentYear + '年' + currentMonth + '月';
+      document.getElementById('currentMonthLabel').textContent = currentYear + '年 ' + currentMonth + '月';
+      fetchData(ymStr);
+    }
+
+    function render(data) {
+      if (!data) return;
+      currentData = data;
+
+      document.getElementById('currentMonthLabel').textContent = data.month || (currentYear + '年 ' + currentMonth + '月');
+      document.getElementById('heroRemaining').textContent = formatYen(data.livingRemaining);
+      document.getElementById('heroActual').textContent = formatYen(data.livingActual);
+      document.getElementById('heroBudget').textContent = formatYen(data.livingBudget);
+
+      const usage = data.livingUsage ? data.livingUsage.toFixed(1) : '0.0';
+      document.getElementById('heroUsageBadge').textContent = '消化率 ' + usage + '%';
+      document.getElementById('totalOutflow').textContent = formatYen(data.totalOutflow);
+      document.getElementById('specialActual').textContent = formatYen(data.specialActual);
+      document.getElementById('updateTime').textContent = data.updatedAt ? ('最終同期 ' + data.updatedAt) : '';
+
+      const list = document.getElementById('categoryList');
+      list.innerHTML = '';
+
+      (data.categories || []).forEach(function(cat) {
+        if (cat.name.indexOf('特別費') !== -1 || cat.name.indexOf('貯金') !== -1 || cat.name === '合計') return;
+        const remaining = cat.remaining !== undefined ? cat.remaining : (cat.budget - cat.actual);
+        const pct = cat.usage !== undefined ? cat.usage : (cat.budget > 0 ? (cat.actual / cat.budget) * 100 : 0);
+        const isOver = pct > 100;
+        const isWarn = pct >= 85 && !isOver;
+        const col = isOver ? 'var(--danger)' : (isWarn ? 'var(--warning)' : 'var(--forest)');
+        const badgeBg = isOver ? 'var(--danger-subtle)' : (isWarn ? '#fef8e7' : 'var(--forest-subtle)');
+        const badgeText = isOver ? (pct.toFixed(1) + '% 超過') : (pct.toFixed(1) + '%');
+        const remHtml = remaining < 0
+          ? ('<span style="color: var(--danger); font-weight: 700;">超過 +' + formatYen(-remaining) + '</span>')
+          : ('残り ' + formatYen(remaining));
+
+        const item = document.createElement('div');
+        item.className = 'cat-item';
+        item.onclick = function() { openCategorySheet(cat.name); };
+        item.innerHTML =
+          '<div class="cat-header">' +
+            '<div class="cat-name-box">' +
+              '<span class="cat-name">' + cat.name + '</span>' +
+              '<span class="cat-arrow">›</span>' +
+            '</div>' +
+            '<span class="cat-nums">' + formatYen(cat.actual) + ' / ' + formatYen(cat.budget) + '</span>' +
+          '</div>' +
+          '<div class="cat-track">' +
+            '<div class="cat-fill" style="width: ' + Math.min(100, pct) + '%; background: ' + col + ';"></div>' +
+          '</div>' +
+          '<div class="cat-footer">' +
+            '<span>' + remHtml + '</span>' +
+            '<span class="badge" style="background: ' + badgeBg + '; color: ' + col + ';">' + badgeText + '</span>' +
+          '</div>';
+        list.appendChild(item);
+      });
+
+      const foodCat = (data.categories || []).find(function(c) { return c.name === '食費'; });
+      if (foodCat && foodCat.remaining < 0) {
+        document.getElementById('insightTitle1').textContent = '食費が予算を ' + formatYen(-foodCat.remaining) + ' 超過しています';
+      } else {
+        document.getElementById('insightTag1').className = 'insight-tag tag-ok';
+        document.getElementById('insightTag1').textContent = '良好';
+        document.getElementById('insightTitle1').textContent = '食費は予算内で順調にコントロールされています';
+      }
+
+      if (document.getElementById('sheetOverlay').classList.contains('active')) {
+        renderSheetItems();
+      }
+    }
+
+    function openCategorySheet(catName) {
+      currentSelectedCat = catName;
+      document.getElementById('sheetCategoryName').textContent = catName + ' の明細内訳';
+      renderSheetItems();
+      document.getElementById('sheetOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSheet() {
+      document.getElementById('sheetOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function setSort(mode) {
+      currentSortMode = mode;
+      document.querySelectorAll('.sort-chip').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-sort') === mode);
+      });
+      renderSheetItems();
+    }
+
+    function renderSheetItems() {
+      const expenses = (currentData && currentData.expenses) || [];
+
+      let filtered = expenses.filter(function(item) {
+        if (currentSelectedCat === '総支出') return true;
+        if (currentSelectedCat.indexOf('特別費') !== -1) return item.category.indexOf('特別費') !== -1 || item.parentCat.indexOf('特別費') !== -1;
+        if (currentSelectedCat.indexOf('食費') !== -1) return item.category === '食費' || item.category === '外食' || item.parentCat === '食費';
+        if (currentSelectedCat.indexOf('自由') !== -1) return item.parentCat.indexOf('自由') !== -1 || ['日用品','衣服・美容','研究・書籍','その他'].indexOf(item.category) !== -1;
+        return item.category.indexOf(currentSelectedCat) !== -1 || item.parentCat.indexOf(currentSelectedCat) !== -1;
+      });
+
+      filtered.sort(function(a, b) {
+        if (currentSortMode === 'date-desc') return new Date(b.date) - new Date(a.date);
+        if (currentSortMode === 'date-asc') return new Date(a.date) - new Date(b.date);
+        if (currentSortMode === 'amt-desc') return b.amount - a.amount;
+        if (currentSortMode === 'amt-asc') return a.amount - b.amount;
+        return 0;
+      });
+
+      const total = filtered.reduce(function(s, x) { return s + (x.amount || 0); }, 0);
+      document.getElementById('sheetSummaryText').textContent = currentYear + '年' + currentMonth + '月 • 合計: ' + formatYen(total) + ' / ' + filtered.length + '件';
+
+      const body = document.getElementById('sheetBody');
+      body.innerHTML = '';
+      if (filtered.length === 0) {
+        body.innerHTML = '<div class="empty-state">該当する明細データはありません</div>';
+        return;
+      }
+
+      filtered.forEach(function(item) {
+        const d = new Date(item.date);
+        const dateStr = !isNaN(d) ? ((d.getMonth()+1) + '/' + d.getDate()) : item.date;
+        const row = document.createElement('div');
+        row.className = 'detail-item';
+        row.innerHTML =
+          '<div class="detail-top">' +
+            '<div class="detail-store">' + item.store + '</div>' +
+            '<div class="detail-amount">' + formatYen(item.amount) + '</div>' +
+          '</div>' +
+          '<div class="detail-meta">' +
+            '<div class="detail-tags">' +
+              '<span class="tag">' + dateStr + '</span>' +
+              '<span class="tag tag-subcat">' + item.category + '</span>' +
+              (item.method ? ('<span class="tag tag-method">' + item.method + '</span>') : '') +
+            '</div>' +
+          '</div>' +
+          (item.note ? ('<div class="detail-note">' + item.note + '</div>') : '');
+        body.appendChild(row);
+      });
+    }
+
+    // GitHubからGASのAPIを叩いてデータを取得する関数
+    function fetchData(ymStr) {
+      if (!ymStr) ymStr = currentYear + '年' + currentMonth + '月';
+      document.getElementById('updateTime').textContent = '同期中...';
+
+      fetch(GAS_API_URL + '?month=' + encodeURIComponent(ymStr))
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          render(data);
+        })
+        .catch(function(err) {
+          console.error(err);
+          document.getElementById('updateTime').textContent = '同期失敗 (再試行してください)';
+        });
+    }
+
+    // 初回ロード
+    window.addEventListener('DOMContentLoaded', function() {
+      fetchData('2026年9月');
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(function(err) {
+          console.warn('SW registration failed:', err);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
