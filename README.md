@@ -62,4 +62,4 @@ Apps Script エディタで `Code.gs` を `gas/Code.gs` の内容に置き換え
 KWGTの設定で使っているGAS URLの末尾に `&key=dd9cc131a5fa196f6d210e3ec6722668` を追加しないと、
 ウィジェットが `{"error":"unauthorized"}` を受け取って表示が壊れます。
 
-例: `https://script.google.com/macros/s/xxxx/exec?type=widget&key=dd9cc131a5fa196f6d210e3ec6722668`
+例: `https://script.google.com/macros/s/AKfycbx3lLYL-Sq3fbEZtsM0zXysujyMEp5qEeOX54WSsyX6gP5KhteWC2Wq-g9AyMyJyQbA/exec?type=widget&key=dd9cc131a5fa196f6d210e3ec6722668`
