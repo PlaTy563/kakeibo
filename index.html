@@ -10,13 +10,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="家計簿">
   <meta name="theme-color" content="#f4f6f5">
-  <meta name="description" content="支出・予算進捗ダッシュボード">
+  <meta name="description" content="支出・予算・収入・貯金進捗ダッシュボード">
 
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-  <title>支出・予算進捗</title>
+  <title>支出・予算・収入ダッシュボード</title>
   <style>
     :root {
       --bg: #f4f6f5;
@@ -28,7 +28,7 @@
       --text-main: #1f2923;
       --text-sub: #7b8a82;
       --text-muted: #8c9b93;
-      --blue: #457b9d;
+      --blue: #2a6f97;
       --blue-subtle: #e8f0f5;
       --warning: #cca43b;
       --danger: #d97736;
@@ -38,6 +38,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: var(--font); background: var(--bg); color: var(--text-main); padding: 14px 16px 80px 16px; max-width: 440px; margin: 0 auto; min-height: 100vh; }
 
+    /* ヘッダー */
     header { padding: 4px 2px 14px 2px; display: flex; justify-content: space-between; align-items: center; }
     .month-picker { display: flex; align-items: center; gap: 4px; }
     .month-btn {
@@ -48,38 +49,52 @@
     .month-label { font-size: 1.25rem; font-weight: 800; color: var(--text-main); padding: 0 4px; }
     .sync-status { font-size: 0.75rem; color: var(--text-muted); }
 
+    /* KPI グリッド */
     .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
     .kpi-card {
       background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
-      padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.15s ease;
+      padding: 13px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.15s ease;
     }
     .kpi-card:active { transform: scale(0.98); }
-    .kpi-title { font-size: 0.75rem; color: var(--text-sub); margin-bottom: 6px; }
-    .kpi-amount { font-size: 1.45rem; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
-    .kpi-sub { font-size: 0.7rem; color: var(--text-muted); }
+    .kpi-card.highlight { background: #fafdfc; border-color: #dbeae2; }
+    .kpi-title { font-size: 0.73rem; color: var(--text-sub); margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; }
+    .kpi-amount { font-size: 1.4rem; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+    .kpi-sub { font-size: 0.68rem; color: var(--text-muted); }
 
+    /* メインカード */
     .main-section-card {
       background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px;
       padding: 18px 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.025);
     }
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-    .section-title { font-size: 1rem; font-weight: 800; color: var(--text-main); }
-    .section-tip { font-size: 0.72rem; color: var(--forest); font-weight: 600; }
+    .section-title { font-size: 0.98rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
+    .section-tip { font-size: 0.72rem; color: var(--forest); font-weight: 600; cursor: pointer; }
 
-    .cat-item { padding: 12px 0; border-bottom: 1px solid #f0f2f1; cursor: pointer; }
-    .cat-item:last-child { border-bottom: none; padding-bottom: 4px; }
-    .cat-item:first-child { padding-top: 4px; }
-    .cat-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+    /* カテゴリ行 */
+    .cat-item { padding: 11px 0; border-bottom: 1px solid #f0f2f1; cursor: pointer; }
+    .cat-item:last-child { border-bottom: none; padding-bottom: 2px; }
+    .cat-item:first-child { padding-top: 2px; }
+    .cat-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
     .cat-name-box { display: flex; align-items: center; gap: 6px; }
-    .cat-name { font-size: 0.92rem; font-weight: 700; color: #2d3732; }
+    .cat-name { font-size: 0.9rem; font-weight: 700; color: #2d3732; }
     .cat-arrow { font-size: 0.85rem; color: #b0beb7; }
-    .cat-nums { font-size: 0.8rem; color: var(--text-sub); }
+    .cat-nums { font-size: 0.78rem; color: var(--text-sub); }
 
-    .cat-track { background: #edf1ef; border-radius: 8px; height: 7px; overflow: hidden; margin-bottom: 6px; }
+    .cat-track { background: #edf1ef; border-radius: 8px; height: 7px; overflow: hidden; margin-bottom: 5px; }
     .cat-fill { height: 100%; border-radius: 8px; transition: width 0.3s ease; }
     .cat-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; }
-    .badge { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
+    .badge { font-size: 0.66rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
 
+    /* 貯金・積立アイテム */
+    .saving-item { padding: 12px 0; border-bottom: 1px solid #f0f2f1; }
+    .saving-item:last-child { border-bottom: none; padding-bottom: 2px; }
+    .saving-item:first-child { padding-top: 2px; }
+    .saving-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+    .saving-name { font-size: 0.9rem; font-weight: 700; color: #2d3732; }
+    .saving-nums { font-size: 0.78rem; color: var(--text-sub); }
+    .saving-meta { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* 気づきカード */
     .insight-card {
       background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px;
       padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.025);
@@ -92,13 +107,22 @@
     .insight-text { font-size: 0.82rem; font-weight: 700; color: #2d3732; }
     .insight-sub { font-size: 0.72rem; color: var(--text-muted); padding-left: 2px; }
 
+    /* ボタン群 */
+    .action-btn-group { display: flex; flex-direction: column; gap: 9px; margin-bottom: 24px; }
     .sync-action-btn {
       width: 100%; background: var(--forest); color: #fff; border: none; border-radius: 14px;
-      padding: 14px; font-size: 0.92rem; font-weight: 700; cursor: pointer; margin-bottom: 20px;
-      display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(33, 104, 76, 0.2);
+      padding: 13px; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 7px; box-shadow: 0 3px 10px rgba(33, 104, 76, 0.18);
     }
     .sync-action-btn:active { transform: scale(0.985); background: #1a533d; }
+    .cal-action-btn {
+      width: 100%; background: #ffffff; color: var(--forest); border: 1.5px solid var(--forest); border-radius: 14px;
+      padding: 12px; font-size: 0.88rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .cal-action-btn:active { background: var(--forest-subtle); }
 
+    /* ボトムシート */
     .sheet-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(4px); z-index: 100;
@@ -108,7 +132,7 @@
 
     .bottom-sheet {
       position: fixed; left: 0; right: 0; bottom: 0; max-width: 460px; margin: 0 auto;
-      height: 82vh; background: #ffffff;
+      height: 84vh; background: #ffffff;
       border-top-left-radius: 24px; border-top-right-radius: 24px;
       border: 1px solid #e5eae7; border-bottom: none; z-index: 101;
       display: flex; flex-direction: column; transform: translateY(100%);
@@ -130,6 +154,7 @@
     }
     .sheet-summary { font-size: 0.78rem; color: var(--forest); font-weight: 600; }
 
+    /* ソートバー */
     .sort-bar {
       display: flex; gap: 6px; padding: 10px 18px; background: #ffffff;
       overflow-x: auto; border-bottom: 1px solid #eef2f0; scrollbar-width: none;
@@ -143,6 +168,7 @@
     }
     .sort-chip.active { background: var(--forest); border-color: var(--forest); color: #fff; }
 
+    /* 明細スクロールエリア */
     .sheet-body {
       padding: 14px 18px 36px 18px; overflow-y: auto; flex: 1;
       display: flex; flex-direction: column; gap: 10px;
@@ -157,13 +183,16 @@
     .detail-store { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
     .detail-amount { font-size: 1.05rem; font-weight: 800; color: var(--forest); }
     .detail-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: var(--text-sub); }
-    .detail-tags { display: flex; gap: 5px; align-items: center; }
+    .detail-tags { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
     .tag { padding: 2px 7px; border-radius: 5px; font-size: 0.65rem; background: #eef2f0; color: #5c6f66; font-weight: 600; }
     .tag-subcat { background: var(--forest-subtle); color: var(--forest); }
     .tag-method { background: var(--blue-subtle); color: var(--blue); }
+    .tag-estimate { background: #fff4e5; color: #b76e00; }
+    .tag-confirmed { background: var(--forest-subtle); color: var(--forest); }
     .detail-note { font-size: 0.72rem; color: var(--text-muted); background: #f0f4f2; padding: 4px 8px; border-radius: 6px; margin-top: 1px; }
     .empty-state { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 0.85rem; }
 
+    /* 生体認証ロック画面 */
     .lock-overlay {
       position: fixed; inset: 0; background: var(--bg);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -187,14 +216,16 @@
 </head>
 <body>
 
+  <!-- 生体認証ロック画面（WebAuthn） -->
   <div class="lock-overlay" id="lockOverlay">
     <div class="lock-icon">🔒</div>
     <div class="lock-title">指紋・顔認証でロック解除</div>
-    <div class="lock-sub">この端末に登録した指紋やFace ID / 画面ロックで、支出・予算データを開きます</div>
+    <div class="lock-sub">この端末に登録した指紋やFace ID / 画面ロックで、家計簿データを開きます</div>
     <button class="lock-btn" id="lockBtn" onclick="unlockApp()">指紋 / Face IDで開く</button>
     <div class="lock-error" id="lockError"></div>
   </div>
 
+  <!-- ヘッダー -->
   <header>
     <div class="month-picker">
       <button class="month-btn" onclick="changeMonth(-1)">‹</button>
@@ -204,13 +235,33 @@
     <div class="sync-status" id="updateTime">読み込み中...</div>
   </header>
 
+  <!-- 財務サマリー（新設：総収入・当月収支） -->
   <div class="kpi-grid">
-    <div class="kpi-card" onclick="openCategorySheet('総支出')">
+    <div class="kpi-card highlight" onclick="openIncomeSheet()">
+      <div class="kpi-title">
+        <span>総収入（見込/確定）</span>
+        <span style="font-size: 0.75rem;">›</span>
+      </div>
+      <div class="kpi-amount" id="totalIncome" style="color: var(--forest);">¥--</div>
+      <div class="kpi-sub" id="incomeSub">確定: ¥-- / 見込: ¥--</div>
+    </div>
+    <div class="kpi-card highlight">
+      <div class="kpi-title">
+        <span>当月収支（手残り）</span>
+      </div>
+      <div class="kpi-amount" id="netBalance">¥--</div>
+      <div class="kpi-sub" id="netBalanceSub">総収入 − 総支出</div>
+    </div>
+  </div>
+
+  <!-- 生活費＆特別費 KPIカード -->
+  <div class="kpi-grid">
+    <div class="kpi-card" onclick="openCategorySheet('生活費')">
       <div class="kpi-title">残り生活予算</div>
       <div class="kpi-amount" id="heroRemaining" style="color: var(--forest);">¥--</div>
       <div class="kpi-sub" id="heroUsageBadge">消化率 --%</div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card" onclick="openCategorySheet('生活費')">
       <div class="kpi-title">生活費実績</div>
       <div class="kpi-amount" id="heroActual">¥--</div>
       <div class="kpi-sub">予算 <span id="heroBudget">¥98,000</span></div>
@@ -221,43 +272,59 @@
       <div class="kpi-sub">全出費合計</div>
     </div>
     <div class="kpi-card" onclick="openCategorySheet('特別費')">
-      <div class="kpi-title">特別費（伊勢旅行）</div>
+      <div class="kpi-title">特別費（伊勢旅行等）</div>
       <div class="kpi-amount" id="specialActual" style="color: var(--blue);">¥--</div>
-      <div class="kpi-sub" id="specialSub">宿泊・駐車場</div>
+      <div class="kpi-sub" id="specialSub">宿泊・駐車場・臨時</div>
     </div>
   </div>
 
+  <!-- 予算消化と内訳セクション -->
   <div class="main-section-card">
     <div class="section-header">
-      <div class="section-title">予算消化と内訳</div>
-      <div class="section-tip">項目タップで明細 ›</div>
+      <div class="section-title">📊 生活費の予算消化と内訳</div>
+      <div class="section-tip" onclick="openCategorySheet('総支出')">全明細 ›</div>
     </div>
     <div class="cat-list" id="categoryList"></div>
   </div>
 
+  <!-- 貯金・積立目標・進捗セクション -->
+  <div class="main-section-card">
+    <div class="section-header">
+      <div class="section-title">🌱 貯金・積立の進捗</div>
+      <div class="section-tip" id="savingSummaryHeader">累計 ¥--</div>
+    </div>
+    <div id="savingList"></div>
+  </div>
+
+  <!-- 今月の気づき -->
   <div class="insight-card">
     <div class="section-header" style="margin-bottom: 6px;">
-      <div class="section-title">今月の気づき</div>
+      <div class="section-title">💡 今月の気づき</div>
       <div class="section-tip" style="color: var(--text-muted); cursor: pointer;" onclick="openCategorySheet('食費')">詳しく見る ›</div>
     </div>
     <div class="insight-row">
       <div class="insight-tag-line">
         <span class="insight-tag tag-danger" id="insightTag1">予算注意</span>
-        <span class="insight-text" id="insightTitle1">食費が予算を ¥269 超過しています</span>
+        <span class="insight-text" id="insightTitle1">食費が予算を超過しています</span>
       </div>
-      <div class="insight-sub" id="insightSub1">外食（6件 ¥6,107）の割合が前週より上昇傾向</div>
+      <div class="insight-sub" id="insightSub1">外食の割合に注意してください</div>
     </div>
-    <div class="insight-row" style="margin-top: 12px;">
+    <div class="insight-row" style="margin-top: 10px;">
       <div class="insight-tag-line">
-        <span class="insight-tag tag-ok">ペース順調</span>
-        <span class="insight-text" id="insightTitle2">自由費は予算内（残り ¥8,545）で推移中</span>
+        <span class="insight-tag tag-ok" id="insightTag2">収支状況</span>
+        <span class="insight-text" id="insightTitle2">当月収支は黒字を維持しています</span>
       </div>
-      <div class="insight-sub">日用品・衣服費の支出が計画通りに収まっています</div>
+      <div class="insight-sub" id="insightSub2">給与見込みと生活支出のバランスが良好です</div>
     </div>
   </div>
 
-  <button class="sync-action-btn" onclick="fetchData()">⟳ スプレッドシートと再同期</button>
+  <!-- アクションボタン群 -->
+  <div class="action-btn-group">
+    <button class="sync-action-btn" onclick="fetchData()">⟳ スプレッドシートと再同期</button>
+    <button class="cal-action-btn" onclick="triggerCalendarSync()">📅 カレンダーからシフト・TA給与を再計算</button>
+  </div>
 
+  <!-- ボトムシート（明細表示） -->
   <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet(event)">
     <div class="bottom-sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle-bar"><div class="sheet-handle"></div></div>
@@ -269,7 +336,8 @@
         <div class="sheet-summary" id="sheetSummaryText">-- • 合計: ¥0 / 0件</div>
       </div>
 
-      <div class="sort-bar">
+      <!-- ソートバー -->
+      <div class="sort-bar" id="sheetSortBar">
         <button class="sort-chip active" data-sort="date-desc" onclick="setSort('date-desc')">日付 (新→旧)</button>
         <button class="sort-chip" data-sort="date-asc" onclick="setSort('date-asc')">日付 (旧→新)</button>
         <button class="sort-chip" data-sort="amt-desc" onclick="setSort('amt-desc')">金額 (高→安)</button>
@@ -283,7 +351,6 @@
   <script>
     // ★GASのWebアプリURL（末尾が /exec のもの）
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx3lLYL-Sq3fbEZtsM0zXysujyMEp5qEeOX54WSsyX6gP5KhteWC2Wq-g9AyMyJyQbA/exec";
-    // GAS側 ACCESS_KEY と同じ値（gas/Code.gs 参照）
     const ACCESS_KEY = "dd9cc131a5fa196f6d210e3ec6722668";
 
     const WEBAUTHN_CRED_KEY = 'kakeibo_webauthn_cred_id';
@@ -299,7 +366,6 @@
       return arr.buffer;
     }
 
-    // 初回のみ：この端末の指紋/Face IDを新規登録
     async function registerBiometric() {
       const cred = await navigator.credentials.create({
         publicKey: {
@@ -322,7 +388,6 @@
       localStorage.setItem(WEBAUTHN_CRED_KEY, bufToB64(cred.rawId));
     }
 
-    // 2回目以降：登録済みの指紋/Face IDで解錠
     async function verifyBiometric(credIdB64) {
       await navigator.credentials.get({
         publicKey: {
@@ -339,7 +404,6 @@
       errEl.textContent = '';
 
       if (!WEBAUTHN_SUPPORTED) {
-        // 生体認証に対応していない端末（PCなど）ではロックをスキップ
         hideLockScreen();
         return;
       }
@@ -360,12 +424,16 @@
 
     function hideLockScreen() {
       document.getElementById('lockOverlay').classList.add('hidden');
-      fetchData('2026年9月');
+      const now = new Date();
+      currentYear = now.getFullYear();
+      currentMonth = now.getMonth() + 1;
+      fetchData();
     }
 
     let currentYear = 2026;
     let currentMonth = 9;
     let currentSelectedCat = '';
+    let currentSheetMode = 'expense'; // 'expense' or 'income'
     let currentSortMode = 'date-desc';
     let currentData = null;
 
@@ -386,9 +454,22 @@
       currentData = data;
 
       document.getElementById('currentMonthLabel').textContent = data.month || (currentYear + '年 ' + currentMonth + '月');
+      
+      // 収入 & 収支
+      const income = data.totalIncome || 0;
+      const net = data.netBalance !== undefined ? data.netBalance : (income - (data.totalOutflow || 0));
+      document.getElementById('totalIncome').textContent = formatYen(income);
+      document.getElementById('incomeSub').textContent = `確定: ${formatYen(data.confirmedIncome)} / 見込: ${formatYen(data.estimatedIncome)}`;
+
+      const netElem = document.getElementById('netBalance');
+      netElem.textContent = (net >= 0 ? '+' : '') + formatYen(net);
+      netElem.style.color = net >= 0 ? 'var(--forest)' : 'var(--danger)';
+      document.getElementById('netBalanceSub').textContent = net >= 0 ? '当月黒字 (手残り見込)' : '当月赤字 (出費超過)';
+
+      // 支出
       document.getElementById('heroRemaining').textContent = formatYen(data.livingRemaining);
       document.getElementById('heroActual').textContent = formatYen(data.livingActual);
-      document.getElementById('heroBudget').textContent = formatYen(data.livingBudget);
+      document.getElementById('heroBudget').textContent = formatYen(data.livingBudget || 98000);
 
       const usage = data.livingUsage ? data.livingUsage.toFixed(1) : '0.0';
       document.getElementById('heroUsageBadge').textContent = '消化率 ' + usage + '%';
@@ -396,6 +477,7 @@
       document.getElementById('specialActual').textContent = formatYen(data.specialActual);
       document.getElementById('updateTime').textContent = data.updatedAt ? ('最終同期 ' + data.updatedAt) : '';
 
+      // カテゴリリスト
       const list = document.getElementById('categoryList');
       list.innerHTML = '';
 
@@ -433,13 +515,57 @@
         list.appendChild(item);
       });
 
+      // 貯金・積立セクション
+      const savingContainer = document.getElementById('savingList');
+      savingContainer.innerHTML = '';
+      const savings = data.savings || [];
+      if (savings.length > 0) {
+        document.getElementById('savingSummaryHeader').textContent = `現在積立: ${formatYen(data.totalSaved)} / 目標: ${formatYen(data.totalTarget)}`;
+        savings.forEach(function(s) {
+          const sPct = s.progressRate || 0;
+          const sItem = document.createElement('div');
+          sItem.className = 'saving-item';
+          sItem.innerHTML = `
+            <div class="saving-header">
+              <span class="saving-name">${s.name}</span>
+              <span class="saving-nums">${formatYen(s.currentAmount)} / ${formatYen(s.targetAmount)} (${sPct}%)</span>
+            </div>
+            <div class="cat-track">
+              <div class="cat-fill" style="width: ${Math.min(100, sPct)}%; background: var(--forest-light);"></div>
+            </div>
+            <div class="saving-meta">
+              <span>目安: ${formatYen(s.monthlyTarget)}/月</span>
+              <span>${s.eta ? '達成予定: ' + s.eta : (s.note || '')}</span>
+            </div>
+          `;
+          savingContainer.appendChild(sItem);
+        });
+      } else {
+        savingContainer.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); padding:6px 0;">貯金・積立データなし</div>';
+      }
+
+      // インサイトカード動的更新
       const foodCat = (data.categories || []).find(function(c) { return c.name === '食費'; });
       if (foodCat && foodCat.remaining < 0) {
+        document.getElementById('insightTag1').className = 'insight-tag tag-danger';
+        document.getElementById('insightTag1').textContent = '予算超過';
         document.getElementById('insightTitle1').textContent = '食費が予算を ' + formatYen(-foodCat.remaining) + ' 超過しています';
       } else {
         document.getElementById('insightTag1').className = 'insight-tag tag-ok';
-        document.getElementById('insightTag1').textContent = '良好';
+        document.getElementById('insightTag1').textContent = '順調';
         document.getElementById('insightTitle1').textContent = '食費は予算内で順調にコントロールされています';
+      }
+
+      if (net >= 0) {
+        document.getElementById('insightTag2').className = 'insight-tag tag-ok';
+        document.getElementById('insightTag2').textContent = '黒字推移';
+        document.getElementById('insightTitle2').textContent = `当月収支は +${formatYen(net)} の黒字見込みです`;
+        document.getElementById('insightSub2').textContent = '給与見込み・奨学金と支出のバランスが安定しています';
+      } else {
+        document.getElementById('insightTag2').className = 'insight-tag tag-danger';
+        document.getElementById('insightTag2').textContent = '赤字注意';
+        document.getElementById('insightTitle2').textContent = `当月収支が ${formatYen(-net)} 不足傾向にあります`;
+        document.getElementById('insightSub2').textContent = '特別費または支出ペースを見直してください';
       }
 
       if (document.getElementById('sheetOverlay').classList.contains('active')) {
@@ -448,8 +574,18 @@
     }
 
     function openCategorySheet(catName) {
+      currentSheetMode = 'expense';
       currentSelectedCat = catName;
-      document.getElementById('sheetCategoryName').textContent = catName + ' の明細内訳';
+      document.getElementById('sheetCategoryName').textContent = catName + ' の支出内訳';
+      renderSheetItems();
+      document.getElementById('sheetOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function openIncomeSheet() {
+      currentSheetMode = 'income';
+      currentSelectedCat = '総収入';
+      document.getElementById('sheetCategoryName').textContent = '収入明細（確定・見込）';
       renderSheetItems();
       document.getElementById('sheetOverlay').classList.add('active');
       document.body.style.overflow = 'hidden';
@@ -469,10 +605,56 @@
     }
 
     function renderSheetItems() {
-      const expenses = (currentData && currentData.expenses) || [];
+      const body = document.getElementById('sheetBody');
+      body.innerHTML = '';
 
+      if (currentSheetMode === 'income') {
+        const incomes = (currentData && currentData.incomes) || [];
+        const sortedIncomes = [...incomes].sort(function(a, b) {
+          if (currentSortMode === 'date-desc') return new Date(b.date) - new Date(a.date);
+          if (currentSortMode === 'date-asc') return new Date(a.date) - new Date(b.date);
+          if (currentSortMode === 'amt-desc') return b.amount - a.amount;
+          if (currentSortMode === 'amt-asc') return a.amount - b.amount;
+          return 0;
+        });
+
+        const total = sortedIncomes.reduce(function(s, x) { return s + (x.amount || 0); }, 0);
+        document.getElementById('sheetSummaryText').textContent = `${currentYear}年${currentMonth}月 • 合計収入: ${formatYen(total)} / ${sortedIncomes.length}件`;
+
+        if (sortedIncomes.length === 0) {
+          body.innerHTML = '<div class="empty-state">該当する収入明細データはありません</div>';
+          return;
+        }
+
+        sortedIncomes.forEach(function(item) {
+          const d = new Date(item.date);
+          const dateStr = !isNaN(d) ? ((d.getMonth()+1) + '/' + d.getDate()) : item.date;
+          const isEst = item.status === '見込';
+          const row = document.createElement('div');
+          row.className = 'detail-item';
+          row.innerHTML = `
+            <div class="detail-top">
+              <div class="detail-store">${item.source}</div>
+              <div class="detail-amount" style="color: var(--forest);">${formatYen(item.amount)}</div>
+            </div>
+            <div class="detail-meta">
+              <div class="detail-tags">
+                <span class="tag">${dateStr}</span>
+                <span class="tag tag-subcat">${item.type || '給与'}</span>
+                <span class="tag ${isEst ? 'tag-estimate' : 'tag-confirmed'}">${item.status || '確定'}</span>
+              </div>
+            </div>
+            ${item.note ? `<div class="detail-note">${item.note}</div>` : ''}
+          `;
+          body.appendChild(row);
+        });
+        return;
+      }
+
+      const expenses = (currentData && currentData.expenses) || [];
       let filtered = expenses.filter(function(item) {
         if (currentSelectedCat === '総支出') return true;
+        if (currentSelectedCat === '生活費') return !item.category.includes('特別費') && !item.parentCat.includes('特別費');
         if (currentSelectedCat.indexOf('特別費') !== -1) return item.category.indexOf('特別費') !== -1 || item.parentCat.indexOf('特別費') !== -1;
         if (currentSelectedCat.indexOf('食費') !== -1) return item.category === '食費' || item.category === '外食' || item.parentCat === '食費';
         if (currentSelectedCat.indexOf('自由') !== -1) return item.parentCat.indexOf('自由') !== -1 || ['日用品','衣服・美容','研究・書籍','その他'].indexOf(item.category) !== -1;
@@ -488,10 +670,8 @@
       });
 
       const total = filtered.reduce(function(s, x) { return s + (x.amount || 0); }, 0);
-      document.getElementById('sheetSummaryText').textContent = currentYear + '年' + currentMonth + '月 • 合計: ' + formatYen(total) + ' / ' + filtered.length + '件';
+      document.getElementById('sheetSummaryText').textContent = `${currentYear}年${currentMonth}月 • 合計: ${formatYen(total)} / ${filtered.length}件`;
 
-      const body = document.getElementById('sheetBody');
-      body.innerHTML = '';
       if (filtered.length === 0) {
         body.innerHTML = '<div class="empty-state">該当する明細データはありません</div>';
         return;
@@ -519,7 +699,6 @@
       });
     }
 
-    // GitHubからGASのAPIを叩いてデータを取得する関数
     function fetchData(ymStr) {
       if (!ymStr) ymStr = currentYear + '年' + currentMonth + '月';
       document.getElementById('updateTime').textContent = '同期中...';
@@ -535,7 +714,22 @@
         });
     }
 
-    // 初回ロード（データ取得はロック解除後に行う）
+    function triggerCalendarSync() {
+      const ymStr = `${currentYear}-${currentMonth < 10 ? '0' + currentMonth : currentMonth}`;
+      document.getElementById('updateTime').textContent = 'カレンダー給与計算中...';
+
+      fetch(GAS_API_URL + '?type=sync&month=' + encodeURIComponent(ymStr) + '&key=' + encodeURIComponent(ACCESS_KEY))
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          fetchData(`${currentYear}年${currentMonth}月`);
+        })
+        .catch(function(err) {
+          console.error(err);
+          alert('カレンダー同期に失敗しました。');
+          fetchData();
+        });
+    }
+
     window.addEventListener('DOMContentLoaded', function() {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(function(err) {
