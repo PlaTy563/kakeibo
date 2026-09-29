@@ -46,12 +46,59 @@ function getSpreadsheet() {
 }
 
 /**
+ * 数値パース用関数（Date型が混入しても誤変換しない堅牢仕様）
+ */
+function parseNum(val) {
+  if (val instanceof Date) return 0;
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  if (!val) return 0;
+  if (Array.isArray(val)) val = val[0];
+  const cleaned = String(val).replace(/[^\d.-]/g, '');
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : n;
+}
+
+/**
+ * 同一収入源判定（「カネスエ」と「アルバイト」を同種として判定）
+ */
+function isSameIncomeSource(s1, s2) {
+  const normalize = function(s) { return String(s || '').trim().toLowerCase(); };
+  const n1 = normalize(s1);
+  const n2 = normalize(s2);
+  if (n1 === n2) return true;
+  
+  const isPartTime = function(s) {
+    return s.indexOf('カネスエ') !== -1 || s.indexOf('アルバイト') !== -1 || s.indexOf('バイト') !== -1;
+  };
+  if (isPartTime(n1) && isPartTime(n2)) return true;
+
+  const isTa = function(s) {
+    return s.indexOf('ta') !== -1 || s.indexOf('演習') !== -1 || s.indexOf('講義補助') !== -1;
+  };
+  if (isTa(n1) && isTa(n2)) return true;
+
+  return false;
+}
+
+/**
+ * 確定状況の正規化判定（「銀行振込」「確定」「済」などは確定扱い）
+ */
+function isConfirmedStatus(statusStr) {
+  const s = String(statusStr || '').trim();
+  if (!s) return true; // 省略時は確定扱い
+  if (s.indexOf('確定') !== -1 || s.indexOf('振込') !== -1 || s.indexOf('済') !== -1) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Web App エントリポイント
  */
 function doGet(e) {
   const params = (e && e.parameter) || {};
 
-  // 0. アクセスキーチェック（全リクエスト共通）
+  // 0. アクセスキーチェック
   if (params.key !== BUDGET_CONFIG.ACCESS_KEY) {
     return ContentService.createTextOutput(JSON.stringify({ error: 'unauthorized' }))
       .setMimeType(ContentService.MimeType.JSON);
@@ -101,7 +148,7 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
-  // 2. GitHub Pagesなど外部フロントエンドからのJSON APIリクエスト（?month=2026年9月 または パラメータなし/json）
+  // 2. 外部フロントエンド（GitHub Pages等）からのJSON APIリクエスト
   if (params.month || params.type === 'json' || params.type === 'api' || params.format === 'json') {
     const targetMonth = params.month || Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy年M月');
     const data = getDashboardData(targetMonth);
@@ -109,7 +156,7 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
-  // 3. ブラウザから直接アクセスされた場合のみHTMLダッシュボードを描画（フォールバック）
+  // 3. ブラウザ直接アクセス時HTMLダッシュボード描画
   const template = HtmlService.createTemplateFromFile('index');
   const now = new Date();
   const defaultYm = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy年M月');
@@ -121,19 +168,7 @@ function doGet(e) {
 }
 
 /**
- * 数値パース用関数
- */
-function parseNum(val) {
-  if (typeof val === 'number') return isNaN(val) ? 0 : val;
-  if (!val) return 0;
-  if (Array.isArray(val)) val = val[0];
-  const cleaned = String(val).replace(/[^\d.-]/g, '');
-  const n = parseFloat(cleaned);
-  return isNaN(n) ? 0 : n;
-}
-
-/**
- * 日付から日本の祝日判定
+ * 日本の祝日判定
  */
 function isJapaneseHoliday(date) {
   try {
@@ -149,12 +184,7 @@ function isJapaneseHoliday(date) {
 }
 
 /**
- * カネスエの1シフト給与計算（1分単位スライスによる厳密計算）
- * 基本時給: 1,050円
- * 17:00〜18:00: +50円 (1,100円)
- * 18:00〜22:00: +100円 (1,150円)
- * 22:00以降: 深夜割増 +25% (基本1,050の25%増 = 1,313円)
- * 日祝一律: +100円 (時間帯加給と重複適用)
+ * カネスエの1シフト給与計算（1分単位スライス厳密計算）
  */
 function calculateKanesueShiftWage(startTime, endTime, isHolidayOrSunday) {
   let totalWage = 0;
@@ -191,7 +221,6 @@ function calculateKanesueShiftWage(startTime, endTime, isHolidayOrSunday) {
 
 /**
  * TAの1シフト給与計算
- * 規定時給: 1,400円/時
  */
 function calculateTAShiftWage(startTime, endTime) {
   const diffMinutes = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
@@ -203,9 +232,7 @@ function calculateTAShiftWage(startTime, endTime) {
 }
 
 /**
- * 指定年月のGoogleカレンダーからカネスエ・TAの予定を抽出し、給与を自動計算
- * @param {number} year 
- * @param {number} month (1-12)
+ * Googleカレンダーから予定を抽出して給与計算
  */
 function getCalendarIncomeForMonth(year, month) {
   const startDate = new Date(year, month - 1, 1, 0, 0, 0);
@@ -230,7 +257,6 @@ function getCalendarIncomeForMonth(year, month) {
   let taTotalMinutes = 0;
   let taCount = 0;
 
-  // 祝日キャッシュ（同月内の判定高速化）
   const holidayCache = {};
 
   for (let i = 0; i < events.length; i++) {
@@ -241,7 +267,6 @@ function getCalendarIncomeForMonth(year, month) {
     const evStart = ev.getStartTime();
     const evEnd = ev.getEndTime();
 
-    // 1. カネスエ判定
     if (title.indexOf(BUDGET_CONFIG.KANESUE.KEYWORD) !== -1) {
       const dateKey = Utilities.formatDate(evStart, 'Asia/Tokyo', 'yyyy-MM-dd');
       if (holidayCache[dateKey] === undefined) {
@@ -252,9 +277,7 @@ function getCalendarIncomeForMonth(year, month) {
       kanesueTotalWage += shiftRes.wage;
       kanesueTotalMinutes += shiftRes.totalMinutes;
       kanesueCount++;
-    }
-    // 2. TA判定
-    else {
+    } else {
       let isTa = false;
       for (let k = 0; k < BUDGET_CONFIG.TA.KEYWORDS.length; k++) {
         if (title.indexOf(BUDGET_CONFIG.TA.KEYWORDS[k]) !== -1) {
@@ -288,8 +311,7 @@ function getCalendarIncomeForMonth(year, month) {
 }
 
 /**
- * カレンダーから計算した給与を「収入明細」シートに自動反映（Upsert）
- * @param {string} targetYmStr 'YYYY-MM' または 'YYYY年M月'（省略時は当月）
+ * カレンダーから計算した給与を「収入明細」シートに自動反映（重複排除・自動クリーンアップ付きUpsert）
  */
 function syncCalendarIncome(targetYmStr) {
   let year, month;
@@ -313,7 +335,6 @@ function syncCalendarIncome(targetYmStr) {
   const lastDay = new Date(year, month, 0).getDate();
   const entryDateStr = ymPadded + '-' + (lastDay < 10 ? '0' + lastDay : lastDay);
 
-  // カレンダーから計算
   const calcResult = getCalendarIncomeForMonth(year, month);
   const ss = getSpreadsheet();
   let incomeSheet = ss.getSheetByName('収入明細');
@@ -325,7 +346,6 @@ function syncCalendarIncome(targetYmStr) {
 
   const values = incomeSheet.getDataRange().getValues();
 
-  // 対象行のUpsert対象
   const updates = [
     {
       source: 'カネスエ',
@@ -340,11 +360,14 @@ function syncCalendarIncome(targetYmStr) {
   ];
 
   const results = [];
+  const rowsToDelete = [];
 
   updates.forEach(function(item) {
     if (item.wage === 0) return;
 
-    let foundRowIndex = -1;
+    let hasConfirmedRow = false;
+    let estimateRowIndices = [];
+
     for (let r = 1; r < values.length; r++) {
       const row = values[r];
       let rowDateStr = '';
@@ -356,22 +379,37 @@ function syncCalendarIncome(targetYmStr) {
       const rowSource = String(row[1] || '').trim();
       const rowStatus = String(row[4] || '').trim();
 
-      if (rowDateStr.indexOf(ymPadded) === 0 && rowSource === item.source) {
-        if (rowStatus === '確定') {
-          foundRowIndex = -2;
-          break;
+      // 同じ年月かつ同種の収入源（「カネスエ」と「アルバイト」を同種と判定）
+      if (rowDateStr.indexOf(ymPadded) === 0 && isSameIncomeSource(rowSource, item.source)) {
+        if (isConfirmedStatus(rowStatus)) {
+          hasConfirmedRow = true;
+        } else {
+          estimateRowIndices.push(r + 1); // 1-indexed
         }
-        foundRowIndex = r + 1;
-        break;
       }
     }
 
-    if (foundRowIndex > 0) {
-      incomeSheet.getRange(foundRowIndex, 3).setValue(item.wage);
-      incomeSheet.getRange(foundRowIndex, 5).setValue('見込');
-      incomeSheet.getRange(foundRowIndex, 6).setValue(item.note);
-      results.push('Updated ' + item.source + ' in row ' + foundRowIndex + ' (¥' + item.wage + ')');
-    } else if (foundRowIndex === -1) {
+    // すでに手動等で確定済み（銀行振込含む）行がある場合：
+    // 重複して見込行が存在しているなら、その見込行を削除して確定側に一本化！
+    if (hasConfirmedRow) {
+      estimateRowIndices.forEach(function(idx) {
+        rowsToDelete.push(idx);
+      });
+      results.push('Skipped ' + item.source + ' (すでに確定済み給与があるため見込重複を排除)');
+    } else if (estimateRowIndices.length > 0) {
+      // 最初の見込行を最新計算値で更新
+      const firstIdx = estimateRowIndices[0];
+      incomeSheet.getRange(firstIdx, 3).setValue(item.wage);
+      incomeSheet.getRange(firstIdx, 5).setValue('見込');
+      incomeSheet.getRange(firstIdx, 6).setValue(item.note);
+      results.push('Updated ' + item.source + ' in row ' + firstIdx + ' (¥' + item.wage + ')');
+
+      // 2件目以降の見込重複行があれば削除対象へ
+      for (let d = 1; d < estimateRowIndices.length; d++) {
+        rowsToDelete.push(estimateRowIndices[d]);
+      }
+    } else {
+      // 確定も既存見込もなければ新規追加
       incomeSheet.appendRow([
         entryDateStr,
         item.source,
@@ -381,16 +419,24 @@ function syncCalendarIncome(targetYmStr) {
         item.note
       ]);
       results.push('Inserted ' + item.source + ' (¥' + item.wage + ')');
-    } else {
-      results.push('Skipped ' + item.source + ' (確定済み)');
     }
+  });
+
+  // 重複行を下から順に削除
+  rowsToDelete.sort(function(a, b) { return b - a; });
+  const uniqueRowsToDelete = Array.from(new Set(rowsToDelete));
+  uniqueRowsToDelete.forEach(function(rowIdx) {
+    try {
+      incomeSheet.deleteRow(rowIdx);
+      results.push('Deleted duplicate estimate row: ' + rowIdx);
+    } catch (e) {}
   });
 
   return { ym: ymPadded, calcResult: calcResult, logs: results };
 }
 
 /**
- * ダッシュボードシートの安全な更新（セル破壊防止リファクタリング）
+ * ダッシュボードシートの安全な更新
  */
 function syncDashboardSheet(targetMonth) {
   const data = getDashboardData(targetMonth);
@@ -400,7 +446,6 @@ function syncDashboardSheet(targetMonth) {
 
   const values = dashSheet.getDataRange().getValues();
 
-  // 見出しセルを柔軟に特定して安全に値を更新
   for (let r = 0; r < values.length; r++) {
     for (let c = 0; c < values[r].length; c++) {
       const cellText = String(values[r][c] || '').trim();
@@ -431,7 +476,7 @@ function autoSyncDaily() {
 }
 
 /**
- * 指定年月のダッシュボードデータ動的集計関数（支出・収入・貯金積立を統合）
+ * ダッシュボードデータ動的集計関数（支出・収入・貯金積立を完全統合＆重複排除）
  */
 function getDashboardData(targetMonth) {
   if (!targetMonth) targetMonth = '2026年9月';
@@ -441,10 +486,9 @@ function getDashboardData(targetMonth) {
 
   const ss = getSpreadsheet();
 
-  // 1. 基本予算マスターの取得
+  // 1. 基本予算マスター
   const summarySheet = ss.getSheetByName('ダッシュボード') || ss.getSheetByName('月別サマリー');
   const sumValues = summarySheet ? summarySheet.getDataRange().getValues() : [];
-
   const budgetConfig = Object.assign({}, BUDGET_CONFIG.DEFAULT_BUDGET);
 
   for (let i = 0; i < sumValues.length; i++) {
@@ -460,7 +504,7 @@ function getDashboardData(targetMonth) {
     }
   }
 
-  // 2. 支出明細シートから集計
+  // 2. 支出明細
   const detailSheet = ss.getSheetByName('支出明細');
   const detailValues = detailSheet ? detailSheet.getDataRange().getValues() : [];
   const expenses = [];
@@ -547,13 +591,10 @@ function getDashboardData(targetMonth) {
   const livingActual = categories.reduce(function(sum, c) { return sum + c.actual; }, 0);
   const totalOutflow = livingActual + specialActual;
 
-  // 3. 収入明細シートから集計
+  // 3. 収入明細（二重計上防止ロジック）
   const incomeSheet = ss.getSheetByName('収入明細');
   const incomeValues = incomeSheet ? incomeSheet.getDataRange().getValues() : [];
-  const incomes = [];
-  let totalIncome = 0;
-  let confirmedIncome = 0;
-  let estimatedIncome = 0;
+  const rawIncomes = [];
 
   for (let r = 1; r < incomeValues.length; r++) {
     const row = incomeValues[r];
@@ -561,7 +602,7 @@ function getDashboardData(targetMonth) {
     const source = String(row[1] || '').trim();
     const amt = parseNum(row[2]);
     const type = String(row[3] || '').trim();
-    const status = String(row[4] || '確定').trim();
+    const rawStatus = String(row[4] || '').trim();
     const note = String(row[5] || '').trim();
 
     if (!dateVal && amt === 0) continue;
@@ -575,24 +616,55 @@ function getDashboardData(targetMonth) {
 
     if (dateStr.indexOf(targetYm) !== 0) continue;
 
-    totalIncome += amt;
-    if (status === '確定') {
-      confirmedIncome += amt;
-    } else {
-      estimatedIncome += amt;
-    }
+    const isConfirmed = isConfirmedStatus(rawStatus);
 
-    incomes.push({
+    rawIncomes.push({
       date: dateStr,
       source: source,
       amount: amt,
       type: type,
-      status: status,
+      status: isConfirmed ? '確定' : '見込',
+      rawStatus: rawStatus,
+      isConfirmed: isConfirmed,
       note: note
     });
   }
 
-  // 4. 貯金・積立管理シートから集計
+  // 同一月内の「バイト/カネスエ」や「TA」の重複を判定
+  // すでに「確定」がある場合、同種の「見込」は二重計上から除外！
+  const confirmedPartTime = rawIncomes.find(function(x) {
+    return x.isConfirmed && (x.source.indexOf('カネスエ') !== -1 || x.source.indexOf('アルバイト') !== -1 || x.source.indexOf('バイト') !== -1);
+  });
+  const confirmedTA = rawIncomes.find(function(x) {
+    return x.isConfirmed && (x.source.indexOf('TA') !== -1 || x.source.indexOf('演習') !== -1);
+  });
+
+  const filteredIncomes = rawIncomes.filter(function(item) {
+    // 確定済みバイトがあるのに、見込バイト（カレンダー自動算出など）があれば除外
+    if (!item.isConfirmed && confirmedPartTime && (item.source.indexOf('カネスエ') !== -1 || item.source.indexOf('アルバイト') !== -1 || item.source.indexOf('バイト') !== -1)) {
+      return false;
+    }
+    // 確定済みTAがあるのに、見込TAがあれば除外
+    if (!item.isConfirmed && confirmedTA && (item.source.indexOf('TA') !== -1 || item.source.indexOf('演習') !== -1)) {
+      return false;
+    }
+    return true;
+  });
+
+  let totalIncome = 0;
+  let confirmedIncome = 0;
+  let estimatedIncome = 0;
+
+  filteredIncomes.forEach(function(item) {
+    totalIncome += item.amount;
+    if (item.isConfirmed) {
+      confirmedIncome += item.amount;
+    } else {
+      estimatedIncome += item.amount;
+    }
+  });
+
+  // 4. 貯金・積立管理（ヘッダー動的マッピング & 正しい列パース）
   const savingSheet = ss.getSheetByName('貯金・積立管理');
   const savingValues = savingSheet ? savingSheet.getDataRange().getValues() : [];
   const savings = [];
@@ -600,34 +672,73 @@ function getDashboardData(targetMonth) {
   let totalTarget = 0;
   let monthlySavingTotal = 0;
 
-  for (let s = 1; s < savingValues.length; s++) {
-    const row = savingValues[s];
-    const name = String(row[0] || '').trim();
-    if (!name) continue;
+  if (savingValues.length > 0) {
+    const headers = savingValues[0].map(function(h) { return String(h || '').trim(); });
+    
+    let nameIdx = headers.findIndex(function(h) { return /項目|目的|名前/.test(h); });
+    let targetIdx = headers.findIndex(function(h) { return /目標金額|目標額/.test(h); });
+    let currentIdx = headers.findIndex(function(h) { return /現在積立額|現在積立|現在額|積立額/.test(h); });
+    let etaIdx = headers.findIndex(function(h) { return /目標日|達成予定|期日|期限/.test(h); });
+    let remainIdx = headers.findIndex(function(h) { return /残必要額|残り|残額/.test(h); });
+    let rateIdx = headers.findIndex(function(h) { return /達成率|進捗率/.test(h); });
+    let monthlyIdx = headers.findIndex(function(h) { return /毎月積立目安|毎月目安|月額/.test(h); });
 
-    const targetAmt = parseNum(row[1]);
-    const currentAmt = parseNum(row[2]);
-    const monthlyTarget = parseNum(row[3]);
-    const eta = String(row[4] || '').trim();
-    const note = String(row[5] || '').trim();
+    // スプレッドシートの実態に基づくフォールバック: [目的, 目標額, 目標日, 現在積立額, 残必要額, 達成率]
+    if (nameIdx === -1) nameIdx = 0;
+    if (targetIdx === -1) targetIdx = 1;
+    if (etaIdx === -1) etaIdx = 2;
+    if (currentIdx === -1) currentIdx = 3;
+    if (remainIdx === -1) remainIdx = 4;
+    if (rateIdx === -1) rateIdx = 5;
 
-    const progressRate = targetAmt > 0 ? (currentAmt / targetAmt) * 100 : 0;
-    totalSaved += currentAmt;
-    totalTarget += targetAmt;
-    monthlySavingTotal += monthlyTarget;
+    for (let s = 1; s < savingValues.length; s++) {
+      const row = savingValues[s];
+      const name = String(row[nameIdx] || '').trim();
+      if (!name) continue;
 
-    savings.push({
-      name: name,
-      targetAmount: targetAmt,
-      currentAmount: currentAmt,
-      monthlyTarget: monthlyTarget,
-      progressRate: Math.min(100, Math.round(progressRate * 10) / 10),
-      eta: eta,
-      note: note
-    });
+      const targetAmt = parseNum(row[targetIdx]);
+      const currentAmt = parseNum(row[currentIdx]);
+      const monthlyTarget = monthlyIdx !== -1 ? parseNum(row[monthlyIdx]) : 0;
+
+      let eta = '';
+      if (etaIdx !== -1 && row[etaIdx]) {
+        if (row[etaIdx] instanceof Date) {
+          eta = Utilities.formatDate(row[etaIdx], 'Asia/Tokyo', 'yyyy/MM/dd');
+        } else {
+          eta = String(row[etaIdx]).trim();
+        }
+      }
+
+      let progressRate = 0;
+      if (rateIdx !== -1 && row[rateIdx] !== undefined && row[rateIdx] !== '') {
+        const rVal = parseNum(row[rateIdx]);
+        progressRate = (rVal <= 1 && rVal > 0) ? (rVal * 100) : rVal;
+      } else if (targetAmt > 0) {
+        progressRate = (currentAmt / targetAmt) * 100;
+      }
+
+      totalSaved += currentAmt;
+      totalTarget += targetAmt;
+      monthlySavingTotal += monthlyTarget;
+
+      let noteText = '';
+      if (remainIdx !== -1 && row[remainIdx]) {
+        noteText = '残り ¥' + parseNum(row[remainIdx]).toLocaleString('ja-JP');
+      }
+
+      savings.push({
+        name: name,
+        targetAmount: targetAmt,
+        currentAmount: currentAmt,
+        monthlyTarget: monthlyTarget,
+        progressRate: Math.min(100, Math.round(progressRate * 10) / 10),
+        eta: eta,
+        note: noteText
+      });
+    }
   }
 
-  // 5. 当月収支の算出
+  // 5. 当月収支
   const netBalance = totalIncome - totalOutflow;
   const livingBalance = totalIncome - livingActual;
 
@@ -645,7 +756,7 @@ function getDashboardData(targetMonth) {
     totalIncome: totalIncome,
     confirmedIncome: confirmedIncome,
     estimatedIncome: estimatedIncome,
-    incomes: incomes,
+    incomes: filteredIncomes,
     netBalance: netBalance,
     livingBalance: livingBalance,
     savings: savings,
