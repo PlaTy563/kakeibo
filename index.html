@@ -107,6 +107,18 @@
     .insight-text { font-size: 0.82rem; font-weight: 700; color: #2d3732; }
     .insight-sub { font-size: 0.72rem; color: var(--text-muted); padding-left: 2px; }
 
+    /* 栄養バランスカード */
+    .nutri-group { margin-top: 9px; }
+    .nutri-group-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+    .nutri-group-name { font-size: 0.8rem; font-weight: 700; color: #2d3732; }
+    .nutri-group-nums { font-size: 0.72rem; color: var(--text-sub); }
+    .nutri-deficit { margin-top: 10px; padding: 9px 11px; border-radius: 10px; background: #fef8e7; }
+    .nutri-deficit-msg { font-size: 0.8rem; font-weight: 700; color: #2d3732; }
+    .nutri-deficit-sug { font-size: 0.74rem; color: var(--text-sub); margin-top: 2px; }
+    .nutri-note { font-size: 0.7rem; color: var(--text-muted); margin-top: 10px; line-height: 1.5; }
+    .nutri-unclassified { font-size: 0.72rem; color: var(--text-sub); margin-top: 8px; }
+    .nutri-unclassified summary { cursor: pointer; color: var(--text-muted); }
+
     /* ボタン群 */
     .action-btn-group { display: flex; flex-direction: column; gap: 9px; margin-bottom: 24px; }
     .sync-action-btn {
@@ -316,6 +328,15 @@
       </div>
       <div class="insight-sub" id="insightSub2">給与見込みと生活支出のバランスが良好です</div>
     </div>
+  </div>
+
+  <!-- 買い物から見た栄養バランス -->
+  <div class="insight-card" id="nutritionCard" style="display: none;">
+    <div class="section-header" style="margin-bottom: 6px;">
+      <div class="section-title">🥗 買い物から見た栄養バランス</div>
+      <div class="section-tip" style="color: var(--text-muted);" id="nutritionWindow">直近14日</div>
+    </div>
+    <div id="nutritionBody"></div>
   </div>
 
   <!-- アクションボタン群 -->
@@ -568,9 +589,76 @@
         document.getElementById('insightSub2').textContent = '特別費または支出ペースを見直してください';
       }
 
+      renderNutrition(data.nutrition);
+
       if (document.getElementById('sheetOverlay').classList.contains('active')) {
         renderSheetItems();
       }
+    }
+
+    function escHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    // 栄養バランスカード（GASの nutrition キー。無い・壊れている場合はカード自体を出さない）
+    function renderNutrition(n) {
+      const card = document.getElementById('nutritionCard');
+      const body = document.getElementById('nutritionBody');
+      if (!n || n.error || !n.groups) { card.style.display = 'none'; return; }
+      card.style.display = '';
+      document.getElementById('nutritionWindow').textContent =
+        '直近' + (n.windowDays || 14) + '日（' + (n.from || '') + ' 〜 ' + (n.to || '') + '）';
+
+      const cov = n.coverage || { foodExpenseCount: 0, withItemsCount: 0, ratio: 0 };
+      let html = '';
+
+      if (cov.ratio < 0.5) {
+        html += '<div class="insight-sub" style="padding-left: 0;">品目データがまだ少ないため判定できません' +
+          '（対象の買い物 ' + cov.foodExpenseCount + '件中 ' + cov.withItemsCount + '件に品目あり）。' +
+          'スプレッドシートの「購入品目」シートに買ったものを書くと、ここに偏りが出ます。</div>';
+      } else {
+        (n.groups || []).forEach(function(g) {
+          if (g.id === 'composite' || !g.target) return;
+          const pct = Math.min(100, g.target > 0 ? (g.days / g.target) * 100 : 0);
+          const col = g.status === 'ok' ? 'var(--forest)' : (g.status === 'zero' ? 'var(--danger)' : 'var(--warning)');
+          html += '<div class="nutri-group">' +
+            '<div class="nutri-group-header">' +
+              '<span class="nutri-group-name">' + escHtml(g.label) + '</span>' +
+              '<span class="nutri-group-nums">' + g.days + '日 / 目標' + g.target + '日' + (g.status === 'ok' ? ' ✓' : '') + '</span>' +
+            '</div>' +
+            '<div class="cat-track"><div class="cat-fill" style="width: ' + pct + '%; background: ' + col + ';"></div></div>' +
+          '</div>';
+        });
+
+        if ((n.deficits || []).length > 0) {
+          html += '<div style="margin-top: 12px; font-size: 0.78rem; font-weight: 800; color: #2d3732;">⚠ 足りていないかも（買ったものベース）</div>';
+          n.deficits.forEach(function(d) {
+            html += '<div class="nutri-deficit">' +
+              '<div class="nutri-deficit-msg">' + escHtml(d.message) + '</div>' +
+              (d.suggestion ? '<div class="nutri-deficit-sug">→ ' + escHtml(d.suggestion) + '</div>' : '') +
+            '</div>';
+          });
+        } else {
+          html += '<div class="insight-sub" style="padding-left: 0; margin-top: 10px;">直近' + (n.windowDays || 14) + '日の買い物では、目立つ偏りは見当たりません。</div>';
+        }
+      }
+
+      let note = '※ 買ったものからの推測です。実際に食べた量とは異なります。';
+      if (n.eatingOutCount > 0) {
+        note += '外食 ' + n.eatingOutCount + '件は中身が分からないため含んでいません。';
+      }
+      html += '<div class="nutri-note">' + note + '</div>';
+
+      if ((n.unclassified || []).length > 0) {
+        html += '<details class="nutri-unclassified"><summary>分類できなかった品目（' + n.unclassified.length + '件）</summary>' +
+          '<div style="margin-top: 4px;">' +
+          n.unclassified.map(function(u) { return escHtml(u.name) + (u.count > 1 ? ' ×' + u.count : ''); }).join('、') +
+          '</div></details>';
+      }
+
+      body.innerHTML = html;
     }
 
     function openCategorySheet(catName) {

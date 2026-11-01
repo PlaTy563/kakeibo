@@ -738,6 +738,18 @@ function getDashboardData(targetMonth) {
     }
   }
 
+  // 4.5 栄養推測（直近14日・月次集計とは独立。失敗してもダッシュボード本体は壊さない）
+  let nutrition = null;
+  try {
+    nutrition = getNutritionInfo(ss, detailValues);
+  } catch (e) {
+    nutrition = {
+      windowDays: NUTRITION_WINDOW_DAYS, error: true,
+      coverage: { foodExpenseCount: 0, withItemsCount: 0, ratio: 0 },
+      eatingOutCount: 0, groups: [], deficits: [], unclassified: []
+    };
+  }
+
   // 5. 当月収支
   const netBalance = totalIncome - totalOutflow;
   const livingBalance = totalIncome - livingActual;
@@ -762,6 +774,382 @@ function getDashboardData(targetMonth) {
     savings: savings,
     totalSaved: totalSaved,
     totalTarget: totalTarget,
-    monthlySavingTotal: monthlySavingTotal
+    monthlySavingTotal: monthlySavingTotal,
+    nutrition: nutrition
   };
+}
+// ===== 栄養推測 (pure) START =====
+// レシート（購入品目）から食品群の偏りを推測する機能。
+// 仕様: workspace/kakeibo-nutrition/SPEC_v0.1.md
+// この区間は SpreadsheetApp / Utilities に依存しない純粋関数のみで構成し、
+// ローカルでテストできるようにする（tests/nutrition.test.js がこの区間を抽出して実行する）。
+
+const NUTRITION_WINDOW_DAYS = 14;
+const NUTRITION_COVERAGE_MIN = 0.5;
+
+const FOOD_GROUPS = [
+  { id: 'staple',    label: '主食',                 target: 2, suggestion: '米や食パンなど主食を1つ買い足す' },
+  { id: 'meat',      label: '肉',                   target: 2, suggestion: '鶏むね肉など安い肉を1パック' },
+  { id: 'fish',      label: '魚介',                 target: 2, suggestion: 'サバ缶か鮭の切り身を1つ。缶詰なら買い置きできる' },
+  { id: 'egg',       label: '卵',                   target: 1, suggestion: '卵1パック。安くて使い回しがきく' },
+  { id: 'soy',       label: '大豆製品',             target: 2, suggestion: '納豆か豆腐を1つ。賞味期限が短い豆腐より納豆が楽' },
+  { id: 'veg_green', label: '緑黄色野菜',           target: 3, suggestion: '冷凍ほうれん草かブロッコリー。冷凍なら無駄にならない' },
+  { id: 'veg_other', label: 'その他野菜・きのこ・海藻', target: 3, suggestion: 'もやし・キャベツ等の安い野菜を1つ' },
+  { id: 'fruit',     label: '果物',                 target: 1, suggestion: 'バナナ1房。最も安くて手間ゼロ' },
+  { id: 'dairy',     label: '乳製品',               target: 2, suggestion: 'ヨーグルトか牛乳を1つ' },
+  { id: 'composite', label: '複合食品',             target: 0, suggestion: '' }
+];
+
+// 不足表示の優先順（同条件なら「次の一手」が実行しやすい群を先に）
+const FOOD_DEFICIT_PRIORITY = ['fish', 'veg_green', 'soy', 'dairy', 'fruit', 'egg', 'meat', 'veg_other', 'staple'];
+
+// 非食品（日用品など）。最優先で除外する
+const FOOD_EXCLUDE_HARD = [
+  '洗剤', 'シャンプー', 'リンス', 'トリートメント', 'ティッシュ', 'トイレットペーパー', '電池',
+  'ゴミ袋', 'ごみ袋', 'ラップ', 'アルミホイル', 'スポンジ', 'ハンドソープ', 'ボディソープ',
+  '歯磨き', '歯ブラシ', 'マスク', '除菌', '漂白', '柔軟剤', '石鹸', '石けん', 'ウェット',
+  'ドッグフード', 'キャットフード', 'ペットフード', '猫砂', '消臭', '芳香剤', '殺虫', '絆創膏'
+];
+
+// 複合食品（弁当・総菜・インスタント等）。中身が分からないので群には数えない
+const FOOD_COMPOSITE = [
+  '弁当', '幕の内', 'のり弁', 'おにぎり', 'サンドイッチ', 'サンド', 'カップ麺', 'カップヌードル',
+  'インスタント', 'レトルト', '魚肉ソーセージ', 'ピザ', '餃子', '焼売', 'シュウマイ', '春巻き',
+  '総菜', '惣菜', '唐揚げ', 'から揚げ', 'コロッケ', 'とんかつ', 'トンカツ', 'ハンバーグ',
+  'ポテトサラダ', 'マカロニサラダ', '豚汁', '味噌汁', 'けんちん汁', '冷凍餃子', '冷凍パスタ',
+  'フライ', '肉まん', '豚まん',
+  '冷凍ピザ', 'グラタン', 'ドリア', 'チャーハン', '炒飯', '焼きそば', 'ナポリタン', 'ミートソース'
+];
+
+// 調味料・菓子・飲料。複合食品の判定の後に除外する（「味噌汁」を味噌より先に複合へ回すため）
+const FOOD_EXCLUDE_SOFT = [
+  '醤油', 'しょうゆ', '味噌', '塩', '砂糖', 'みりん', '料理酒', '酢', 'ソース', 'ケチャップ',
+  'マヨネーズ', 'ドレッシング', 'サラダ油', 'ごま油', 'オリーブオイル', 'めんつゆ', 'だし', '出汁',
+  'コンソメ', 'カレールー', '香辛料', 'スパイス', 'わさび', 'からし', '七味', '胡椒', 'コショウ',
+  'チョコ', 'クッキー', 'ポテトチップス', 'チップス', 'スナック', 'キャンディ', '飴', 'ガム',
+  'プリン', 'ゼリー', 'アイス', 'アイスクリーム', 'ケーキ', 'ドーナツ', '菓子', 'メロンパン',
+  '菓子パン', 'あんパン', 'カレーパン', 'ジャム', 'はちみつ', '蜂蜜',
+  'コーヒー', '紅茶', '緑茶', '麦茶', '烏龍茶', 'ウーロン茶', 'お茶', 'ジュース', 'コーラ',
+  'サイダー', '炭酸', 'ビール', 'ワイン', '日本酒', '焼酎', 'チューハイ', 'ハイボール',
+  'エナジードリンク', 'ミネラルウォーター', '天然水', '米油', '鶏ガラ', 'ごぼう茶', 'コーン茶'
+];
+
+// 群別キーワード辞書。最長一致で判定するので、紛らわしい語は長い形で登録する
+const FOOD_DICT = {
+  staple: [
+    '食パン', 'うどん', 'そば', '蕎麦', 'パスタ', 'スパゲッティ', 'スパゲティ', 'オートミール',
+    'シリアル', 'グラノーラ', '米粉', '白米', '玄米', 'もち米', '餅', 'ご飯', 'ごはん',
+    'ラーメン', '中華麺', 'そうめん', '素麺', 'ひやむぎ', '冷麦', 'パン', '米'
+  ],
+  meat: [
+    'サラダチキン', '豚こま', '豚バラ', '豚ロース', '豚ヒレ', '豚肉', '牛肉', '牛こま', '牛バラ',
+    '鶏むね', '鶏もも', '鶏肉', '手羽', 'ささみ', 'ササミ', '砂肝', 'ひき肉', '挽き肉', '合いびき',
+    '合挽き', 'ミンチ', 'ハム', 'ベーコン', 'ソーセージ', 'ウインナー', 'ウィンナー', 'チャーシュー',
+    'ローストビーフ', 'スペアリブ', 'レバー', 'ホルモン', '焼肉', 'ステーキ肉', 'しゃぶしゃぶ肉',
+    '豚', '鶏'
+  ],
+  fish: [
+    '魚肉', '鮭', 'サケ', 'サーモン', 'サバ', '鯖', 'アジ', '鯵', 'イワシ', '鰯', 'サンマ', '秋刀魚',
+    'ブリ', '鰤', 'マグロ', '鮪', 'カツオ', '鰹', 'ツナ', 'シーチキン', 'タラ', '鱈', 'カレイ',
+    'ヒラメ', 'タイ', '鯛', 'イカ', 'タコ', 'エビ', '海老', 'カニ', '蟹', 'ホタテ', '帆立',
+    'アサリ', 'シジミ', 'ハマグリ', 'ちくわ', 'チクワ', 'かまぼこ', 'カマボコ', 'はんぺん',
+    'さつま揚げ', 'しらす', 'シラス', 'ちりめん', '明太子', 'たらこ', 'タラコ', 'いくら', 'イクラ',
+    'ししゃも', 'シシャモ', 'サワラ', '鰆', 'アユ', '鮎', '穴子', 'ウナギ', '鰻', 'キス', 'ワカサギ',
+    '刺身', '切り身', '干物', '塩鮭', '鮭フレーク'
+  ],
+  egg: ['卵', 'たまご', 'タマゴ', 'エッグ', 'うずら'],
+  soy: [
+    '豆乳', '納豆', '豆腐', '絹ごし', '木綿豆腐', '厚揚げ', '油揚げ', '枝豆', 'エダマメ',
+    '大豆', 'おから', '高野豆腐', 'がんも', '湯葉', 'きなこ', '黄粉'
+  ],
+  veg_green: [
+    'ほうれん草', 'ホウレン草', 'ブロッコリー', 'にんじん', 'ニンジン', '人参', 'ピーマン',
+    'パプリカ', 'かぼちゃ', 'カボチャ', '南瓜', 'トマト', 'ミニトマト', '小松菜', 'チンゲン菜',
+    'ニラ', 'オクラ', 'アスパラ', '春菊', 'しそ', '大葉', 'モロヘイヤ', 'ツルムラサキ', '菜の花',
+    'ブロッコリースプラウト', 'グリーンリーフ', 'サニーレタス', '水菜', 'ルッコラ', 'ケール', '芽キャベツ'
+  ],
+  veg_other: [
+    'カット野菜', 'もやし', 'モヤシ', 'キャベツ', 'レタス', 'きゅうり', 'キュウリ', '大根', 'ダイコン',
+    '玉ねぎ', 'タマネギ', '玉葱', 'じゃがいも', 'ジャガイモ', '馬鈴薯', '白菜', 'ハクサイ', 'なす',
+    'ナス', 'ねぎ', 'ネギ', '長ねぎ', '長ネギ', 'ごぼう', 'ゴボウ', 'れんこん', 'レンコン',
+    'さつまいも', 'サツマイモ', '里芋', 'ながいも', '長芋', '山芋', 'セロリ', 'カリフラワー',
+    'とうもろこし', 'トウモロコシ', 'コーン', 'しいたけ', 'シイタケ', '椎茸', 'しめじ', 'シメジ',
+    'えのき', 'エノキ', 'まいたけ', 'マイタケ', 'エリンギ', 'なめこ', 'ナメコ', 'きのこ', 'キノコ',
+    'わかめ', 'ワカメ', 'ひじき', 'ヒジキ', 'のり', '海苔', '昆布', 'もずく', 'モズク', 'めかぶ',
+    '海藻', '大豆もやし', 'かいわれ', '豆苗', 'ズッキーニ', 'みょうが', '生姜', 'しょうが', 'にんにく'
+  ],
+  fruit: [
+    'バナナ', 'りんご', 'リンゴ', '林檎', 'みかん', 'ミカン', 'オレンジ', 'レモン', 'キウイ',
+    'いちご', 'イチゴ', '苺', 'ぶどう', 'ブドウ', '葡萄', '梨', 'なし', '桃', 'モモ', 'メロン',
+    'スイカ', '西瓜', 'パイナップル', 'パイン', 'マンゴー', 'さくらんぼ', 'サクランボ', '柿', 'カキ',
+    'ブルーベリー', 'グレープフルーツ', 'シャインマスカット', 'マスカット', 'キンカン', '金柑',
+    'びわ', 'いちじく', 'ラズベリー', 'ベリー'
+  ],
+  dairy: [
+    '牛乳', 'ヨーグルト', 'チーズ', 'バター', '生クリーム', 'ホイップ', '練乳', '粉ミルク',
+    'モッツァレラ', 'パルメザン', 'ゴーダ', 'カマンベール', 'クリームチーズ', 'ミルク'
+  ]
+};
+
+// 最長一致用のフラットな辞書（初期化時に長さ降順ソート）
+const FOOD_DICT_FLAT = (function() {
+  const entries = [];
+  Object.keys(FOOD_DICT).forEach(function(groupId) {
+    FOOD_DICT[groupId].forEach(function(kw) { entries.push({ kw: kw, group: groupId }); });
+  });
+  entries.sort(function(a, b) { return b.kw.length - a.kw.length; });
+  return entries;
+})();
+
+const FOOD_GROUP_BY_ID = (function() {
+  const map = {};
+  FOOD_GROUPS.forEach(function(g) { map[g.id] = g; });
+  return map;
+})();
+
+function normalizeFoodName(rawName) {
+  let s = String(rawName || '').trim();
+  if (!s) return '';
+  try { s = s.normalize('NFKC'); } catch (e) { /* 古いランタイムではそのまま */ }
+  s = s.replace(/[\s　・,，、]/g, '');
+  return s;
+}
+
+function containsAny_(name, keywords) {
+  for (let i = 0; i < keywords.length; i++) {
+    if (name.indexOf(keywords[i]) !== -1) return true;
+  }
+  return false;
+}
+
+/**
+ * 品目名を食品群に分類する。
+ * 戻り値: 群ID / 'composite' / 'excluded' / 'unclassified'
+ * 優先順位: 非食品(強) → 複合食品 → 調味料・菓子・飲料(弱) → 群辞書の最長一致
+ */
+function classifyFoodItem(rawName) {
+  const name = normalizeFoodName(rawName);
+  if (!name) return 'unclassified';
+  // 例外: サラダチキンは「サラダ」を含むが肉として数える
+  if (name.indexOf('サラダチキン') !== -1) return 'meat';
+  if (containsAny_(name, FOOD_EXCLUDE_HARD)) return 'excluded';
+  if (containsAny_(name, FOOD_COMPOSITE)) return 'composite';
+  if (containsAny_(name, FOOD_EXCLUDE_SOFT)) return 'excluded';
+  for (let i = 0; i < FOOD_DICT_FLAT.length; i++) {
+    if (name.indexOf(FOOD_DICT_FLAT[i].kw) !== -1) return FOOD_DICT_FLAT[i].group;
+  }
+  return 'unclassified';
+}
+
+// 'yyyy-MM-dd' に日数を加減する（UTC基準で計算し、文字列比較可能な形式で返す）
+function nutritionDateAdd_(dateStr, deltaDays) {
+  const parts = String(dateStr).split('-');
+  const d = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10) + deltaDays));
+  const y = d.getUTCFullYear();
+  const m = ('0' + (d.getUTCMonth() + 1)).slice(-2);
+  const day = ('0' + d.getUTCDate()).slice(-2);
+  return y + '-' + m + '-' + day;
+}
+
+// 備考欄がカンマ区切りの品目リストらしい場合にトークンへ分解する。通常の文章は対象にしない
+function parseNoteItems_(note) {
+  const s = String(note || '').trim();
+  if (!s) return [];
+  const hasComma = /[,，]/.test(s);
+  const hasJpComma = s.indexOf('、') !== -1 && s.length <= 50 && s.indexOf('。') === -1;
+  if (!hasComma && !hasJpComma) return [];
+  return s.split(/[,，、]/).map(function(t) { return t.trim(); })
+    .filter(function(t) { return t.length >= 1 && t.length <= 30; });
+}
+
+/**
+ * 栄養集計の本体（純粋関数）。
+ * expenses: [{date:'yyyy-MM-dd', store, amount, category, note}]
+ * items:    [{date:'yyyy-MM-dd', store, name, qty, manual}]  manualは群IDまたは群ラベル（手直し優先）
+ * todayStr: 'yyyy-MM-dd'（Asia/Tokyoの今日）
+ */
+function buildNutrition(expenses, items, todayStr) {
+  const windowDays = NUTRITION_WINDOW_DAYS;
+  const fromStr = nutritionDateAdd_(todayStr, -(windowDays - 1));
+  const inWindow = function(dateStr) {
+    return dateStr && dateStr >= fromStr && dateStr <= todayStr;
+  };
+
+  // 返品行（マイナス金額）のキー。対応する品目は集計から落とす
+  const returnKeys = {};
+  (expenses || []).forEach(function(e) {
+    if (e && e.amount < 0) returnKeys[e.date + '|' + e.store] = true;
+  });
+
+  // カバレッジ: 直近14日の「食費（外食除く）」支出のうち、品目データがある割合
+  let foodExpenseCount = 0;
+  let withItemsCount = 0;
+  let eatingOutCount = 0;
+  const itemKeys = {};
+  (items || []).forEach(function(it) {
+    if (it && it.date && it.store) itemKeys[it.date + '|' + it.store] = true;
+  });
+
+  // 集計用の品目リスト（購入品目シート＋備考パース）
+  const allItems = [];
+  (items || []).forEach(function(it) {
+    if (!it || !inWindow(it.date) || !it.name) return;
+    if (returnKeys[it.date + '|' + it.store]) return;
+    allItems.push({ date: it.date, name: it.name, qty: it.qty > 0 ? it.qty : 1, manual: it.manual || '' });
+  });
+
+  (expenses || []).forEach(function(e) {
+    if (!e || !inWindow(e.date)) return;
+    if (e.category === '外食') { eatingOutCount++; return; }
+    if (e.category !== '食費' || e.amount < 0) return;
+    foodExpenseCount++;
+    const noteItems = parseNoteItems_(e.note);
+    if (itemKeys[e.date + '|' + e.store] || noteItems.length > 0) withItemsCount++;
+    noteItems.forEach(function(token) {
+      allItems.push({ date: e.date, name: token, qty: 1, manual: '' });
+    });
+  });
+
+  const coverageRatio = foodExpenseCount > 0 ? withItemsCount / foodExpenseCount : 0;
+
+  // 群ごとの集計
+  const stats = {};
+  FOOD_GROUPS.forEach(function(g) {
+    stats[g.id] = { daysSet: {}, qtyByDate: {}, count: 0 };
+  });
+  const unclassifiedMap = {};
+
+  allItems.forEach(function(it) {
+    let groupId = '';
+    const manual = String(it.manual || '').trim();
+    if (manual) {
+      if (FOOD_GROUP_BY_ID[manual]) groupId = manual;
+      else {
+        FOOD_GROUPS.forEach(function(g) { if (g.label === manual) groupId = g.id; });
+      }
+    }
+    if (!groupId) groupId = classifyFoodItem(it.name);
+    if (groupId === 'excluded') return;
+    if (groupId === 'unclassified') {
+      const key = String(it.name).trim();
+      unclassifiedMap[key] = (unclassifiedMap[key] || 0) + 1;
+      return;
+    }
+    const st = stats[groupId];
+    if (!st) return;
+    st.count++;
+    st.daysSet[it.date] = true;
+    st.qtyByDate[it.date] = (st.qtyByDate[it.date] || 0) + it.qty;
+  });
+
+  const groups = FOOD_GROUPS.map(function(g) {
+    const st = stats[g.id];
+    const distinctDays = Object.keys(st.daysSet).length;
+    // まとめ買い補正: 同一群を同一日に数量3以上買った日は2日分として数える
+    let bonus = 0;
+    Object.keys(st.qtyByDate).forEach(function(d) { if (st.qtyByDate[d] >= 3) bonus++; });
+    const days = Math.min(windowDays, distinctDays + bonus);
+    let status = 'ok';
+    if (g.target === 0) status = 'info';
+    else if (days === 0) status = 'zero';
+    else if (days < g.target) status = 'low';
+    return { id: g.id, label: g.label, days: days, count: st.count, target: g.target, status: status };
+  });
+
+  // 不足判定（カバレッジ不足のときは出さない）
+  const deficits = [];
+  if (coverageRatio >= NUTRITION_COVERAGE_MIN) {
+    const candidates = groups.filter(function(g) {
+      return g.target > 0 && (g.status === 'zero' || g.status === 'low');
+    });
+    candidates.sort(function(a, b) {
+      const za = a.status === 'zero' ? 0 : 1;
+      const zb = b.status === 'zero' ? 0 : 1;
+      if (za !== zb) return za - zb;
+      const ra = a.days / a.target;
+      const rb = b.days / b.target;
+      if (ra !== rb) return ra - rb;
+      return FOOD_DEFICIT_PRIORITY.indexOf(a.id) - FOOD_DEFICIT_PRIORITY.indexOf(b.id);
+    });
+    candidates.slice(0, 2).forEach(function(g) {
+      const def = FOOD_GROUP_BY_ID[g.id];
+      deficits.push({
+        id: g.id,
+        label: g.label,
+        status: g.status,
+        message: g.status === 'zero'
+          ? (g.label + 'を買った形跡が' + windowDays + '日ありません')
+          : (g.label + 'が少なめです（' + g.days + '日／目標' + g.target + '日）'),
+        suggestion: def ? def.suggestion : ''
+      });
+    });
+  }
+
+  const unclassified = Object.keys(unclassifiedMap).map(function(name) {
+    return { name: name, count: unclassifiedMap[name] };
+  }).sort(function(a, b) { return b.count - a.count; }).slice(0, 20);
+
+  return {
+    windowDays: windowDays,
+    from: fromStr,
+    to: todayStr,
+    coverage: {
+      foodExpenseCount: foodExpenseCount,
+      withItemsCount: withItemsCount,
+      ratio: Math.round(coverageRatio * 100) / 100
+    },
+    eatingOutCount: eatingOutCount,
+    groups: groups,
+    deficits: deficits,
+    unclassified: unclassified
+  };
+}
+// ===== 栄養推測 (pure) END =====
+
+/**
+ * スプレッドシートから栄養情報を取得する（GAS依存のラッパー）。
+ * 「購入品目」シートが無ければヘッダー付きで自動作成する（収入明細の自動作成と同じ流儀）。
+ * detailValues は「支出明細」の全行（getDashboardData が読み済みのものを使い回す）。
+ */
+function getNutritionInfo(ss, detailValues) {
+  let itemSheet = ss.getSheetByName('購入品目');
+  if (!itemSheet) {
+    itemSheet = ss.insertSheet('購入品目');
+    itemSheet.appendRow(['日付', '店名', '品目名', '数量', '金額', '分類']);
+  }
+  const itemValues = itemSheet.getDataRange().getValues();
+
+  const toDateStr = function(v) {
+    if (v instanceof Date) return Utilities.formatDate(v, 'Asia/Tokyo', 'yyyy-MM-dd');
+    return String(v || '').trim();
+  };
+
+  const expenses = [];
+  for (let i = 1; i < detailValues.length; i++) {
+    const row = detailValues[i];
+    expenses.push({
+      date: toDateStr(row[0]),
+      store: String(row[1] || '').trim(),
+      amount: parseNum(row[2]),
+      category: String(row[3] || '').trim(),
+      note: String(row[7] || '').trim()
+    });
+  }
+
+  const items = [];
+  for (let r = 1; r < itemValues.length; r++) {
+    const row = itemValues[r];
+    const name = String(row[2] || '').trim();
+    if (!name) continue;
+    items.push({
+      date: toDateStr(row[0]),
+      store: String(row[1] || '').trim(),
+      name: name,
+      qty: parseNum(row[3]),
+      manual: String(row[5] || '').trim()
+    });
+  }
+
+  const todayStr = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd');
+  return buildNutrition(expenses, items, todayStr);
 }
