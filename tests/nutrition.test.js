@@ -1,1 +1,192 @@
-LyoqCiAqIOaghOmkiuaOqOa4rOODreOCuOODg+OCr+OBruODreODvOOCq+ODq+ODhuOCueODiOOAggogKiBnYXMvQ29kZS5ncyDjga7jgIzmoITppIrmjqjmuKwgKHB1cmUp44CN5Yy66ZaT44KS5oq95Ye644GX44GmIE5vZGUg44Gn5a6f6KGM44GZ44KL44CCCiAqIOWun+ihjDogbm9kZSB0ZXN0cy9udXRyaXRpb24udGVzdC5qcwogKi8KY29uc3QgZnMgPSByZXF1aXJlKCdmcycpOwpjb25zdCB2bSA9IHJlcXVpcmUoJ3ZtJyk7CmNvbnN0IHBhdGggPSByZXF1aXJlKCdwYXRoJyk7Cgpjb25zdCBjb2RlID0gZnMucmVhZEZpbGVTeW5jKHBhdGguam9pbihfX2Rpcm5hbWUsICcuLicsICdnYXMnLCAnQ29kZS5ncycpLCAndXRmOCcpOwpjb25zdCBzdGFydCA9IGNvZGUuaW5kZXhPZignLy8gPT09PT0g5qCE6aSK5o6o5risIChwdXJlKSBTVEFSVCA9PT09PScpOwpjb25zdCBlbmQgPSBjb2RlLmluZGV4T2YoJy8vID09PT09IOaghOmkiuaOqOa4rCAocHVyZSkgRU5EID09PT09Jyk7CmlmIChzdGFydCA9PT0gLTEgfHwgZW5kID09PSAtMSkgewogIGNvbnNvbGUuZXJyb3IoJ0ZBSUw6IHB1cmXljLrplpPjga7jg57jg7zjgqvjg7zjgYzopovjgaTjgYvjgorjgb7jgZvjgpMnKTsKICBwcm9jZXNzLmV4aXQoMSk7Cn0KY29uc3QgcHVyZSA9IGNvZGUuc2xpY2Uoc3RhcnQsIGVuZCk7CmNvbnN0IHNhbmRib3ggPSB7fTsKdm0uY3JlYXRlQ29udGV4dChzYW5kYm94KTsKdm0ucnVuSW5Db250ZXh0KHB1cmUgKyAnXG47dGhpcy5fX2V4cCA9IHsgY2xhc3NpZnlGb29kSXRlbSwgYnVpbGROdXRyaXRpb24gfTsnLCBzYW5kYm94KTsKY29uc3QgeyBjbGFzc2lmeUZvb2RJdGVtLCBidWlsZE51dHJpdGlvbiB9ID0gc2FuZGJveC5fX2V4cDsKCmxldCBwYXNzZWQgPSAwLCBmYWlsZWQgPSAwOwpmdW5jdGlvbiBjaGVjayhsYWJlbCwgYWN0dWFsLCBleHBlY3RlZCkgewogIGNvbnN0IGEgPSBKU09OLnN0cmluZ2lmeShhY3R1YWwpLCBlID0gSlNPTi5zdHJpbmdpZnkoZXhwZWN0ZWQpOwogIGlmIChhID09PSBlKSB7IHBhc3NlZCsrOyB9CiAgZWxzZSB7IGZhaWxlZCsrOyBjb25zb2xlLmxvZygnRkFJTDogJyArIGxhYmVsICsgJ1xuICBleHBlY3RlZDogJyArIGUgKyAnXG4gIGFjdHVhbDogICAnICsgYSk7IH0KfQoKLy8gLS0tLSDliIbpoZ7jg4bjgrnjg4jvvIjku5Xmp5jmm7ggwqc0LjQgKyDntJvjgonjgo/jgZfjgYTjgrHjg7zjgrnvvIkgLS0tLQpjb25zdCBjbGFzc2lmeUNhc2VzID0gWwogIFsn5Zu955Sj6LGa44GT44G+5YiH44KMIDMwMGcnLCAnbWVhdCddLAogIFsn44K144OQ5rC054Wu57y2JywgJ2Zpc2gnXSwKICBbJ+e1ueOBlOOBl+ixhuiFkCcsICdzb3knXSwKICBbJ+e0jeixhiAz44OR44OD44KvJywgJ3NveSddLAogIFsn6LGG5LmzIDEwMDBtbCcsICdzb3knXSwKICBbJ+eJm+S5syAxMDAwbWwnLCAnZGFpcnknXSwKICBbJ+eJm+iCieWIh+OCiuiQveOBqOOBlycsICdtZWF0J10sCiAgWyflhrflh43jgbvjgYbjgozjgpPojYknLCAndmVnX2dyZWVuJ10sCiAgWyfjg5bjg63jg4PjgrPjg6rjg7wnLCAndmVnX2dyZWVuJ10sCiAgWyfjgoLjgoTjgZcnLCAndmVnX290aGVyJ10sCiAgWyfjgo/jgYvjgoEnLCAndmVnX290aGVyJ10sCiAgWyfjg5Djg4rjg4onLCAnZnJ1aXQnXSwKICBbJ+WNtSAxMOWAiycsICdlZ2cnXSwKICBbJ+exsyA1a2cnLCAnc3RhcGxlJ10sCiAgWyfluZXjga7lhoXlvIHlvZMnLCAnY29tcG9zaXRlJ10sCiAgWyfjgqvjg4Pjg5fjg4zjg7zjg4njg6snLCAnY29tcG9zaXRlJ10sCiAgWyfljbXjgrXjg7Pjg4knLCAnY29tcG9zaXRlJ10sCiAgWyfmtJfmv6/mtJfliaQnLCAnZXhjbHVkZWQnXSwKICBbJ+OBl+OCh+OBhuOChicsICdleGNsdWRlZCddLAogIFsn44Od44OG44OI44OB44OD44OX44K5JywgJ2V4Y2x1ZGVkJ10sCiAgLy8g57Sb44KJ44KP44GX44GE44Kx44O844K5CiAgWyfjgrXjg6njg4Djg4Hjgq3jg7MnLCAnbWVhdCddLAogIFsn6a2a6IKJ44K944O844K744O844K4JywgJ2NvbXBvc2l0ZSddLAogIFsn5ZGz5ZmM5rGBJywgJ2NvbXBvc2l0ZSddLAogIFsn5ZGz5ZmMJywgJ2V4Y2x1ZGVkJ10sCiAgWyfjgqvjgq3jg5Xjg6njgqQnLCAnY29tcG9zaXRlJ10sCiAgWyfjg4Tjg4rnvLYnLCAnZmlzaCddLAogIFsn44Oo44O844Kw44Or44OIJywgJ2RhaXJ5J10sCiAgWyfpto/jgoDjga3ogoknLCAnbWVhdCddLAogIFsn44Gr44KT44GY44KTJywgJ3ZlZ19ncmVlbiddLAogIFsn44Kt44Oj44OZ44OEJywgJ3ZlZ19vdGhlciddLAogIFsn7727776K776e57y2JywgJ2Zpc2gnXSwgLy8g5Y2K6KeS44Kr44OK4oaS5YWo6KeS5YyWCiAgWyfjgZTjgbzjgYbojLYnLCAnZXhjbHVkZWQnXSwKICAvLyDlrp/jg4fjg7zjgr/vvIgyMDI2LTEw5pyI5YiG77yJ44Gn6KaL44Gk44GL44Gj44Gf5pyq5YiG6aGe44Gu5r2w44GX6L6844G/CiAgWyfjgqTjg6rjgrTjg57jgrfjg60nLCAnZXhjbHVkZWQnXSwKICBbJ+OCs+ODvOODq+OCueODreODvOOCteODqeODgCcsICdjb21wb3NpdGUnXSwKICBbJ++8u+Wumumjn++8veOBleOBsOOBrueCreeBq+eEvOOBjScsICdjb21wb3NpdGUnXSwKICBbJ+OBleOBsOOBruWhqeeEvOOBjScsICdmaXNoJ10sCiAgWyfjgqLjg6Tjgr/jgqsgNjUwbWwnLCAnZXhjbHVkZWQnXSwKICBbJ+S4gOeVquaQvuOCiicsICdleGNsdWRlZCddLAogIFsn5Lya5ZOh5YCk5byV44O756iO6Kq/5pW0JywgJ2V4Y2x1ZGVkJ10sCiAgWyfjgrXjg6njg4DmsrknLCAnZXhjbHVkZWQnXSwKICBbJ+OBlOOBvuixhuiFkCcsICdzb3knXSwKICBbJ+WujOWFqOODoeOCtyDjg4jjg6Djg6Tjg6Djg6njgqTjgrknLCAnY29tcG9zaXRlJ10sCiAgWyfloanprq0nLCAnZmlzaCddLAogIFsn44Gg44GX5be744GN5Y21JywgJ2VnZyddLAogIFsn6aOf5aGpJywgJ2V4Y2x1ZGVkJ10sCl07CmNsYXNzaWZ5Q2FzZXMuZm9yRWFjaChmdW5jdGlvbihbbmFtZSwgZXhwZWN0ZWRdKSB7CiAgY2hlY2soJ2NsYXNzaWZ5OiAnICsgbmFtZSwgY2xhc3NpZnlGb29kSXRlbShuYW1lKSwgZXhwZWN0ZWQpOwp9KTsKCi8vIC0tLS0g6ZuG6KiI44OG44K544OIIC0tLS0KY29uc3QgVE9EQVkgPSAnMjAyNi0xMS0wMSc7IC8vIOeqk+OBryAyMDI2LTEwLTE5IOOAnCAyMDI2LTExLTAxCmZ1bmN0aW9uIGV4cChkYXRlLCBzdG9yZSwgYW1vdW50LCBjYXRlZ29yeSwgbm90ZSkgewogIHJldHVybiB7IGRhdGUsIHN0b3JlLCBhbW91bnQsIGNhdGVnb3J5LCBub3RlOiBub3RlIHx8ICcnIH07Cn0KZnVuY3Rpb24gaXRlbShkYXRlLCBzdG9yZSwgbmFtZSwgcXR5LCBtYW51YWwpIHsKICByZXR1cm4geyBkYXRlLCBzdG9yZSwgbmFtZSwgcXR5OiBxdHkgfHwgMSwgbWFudWFsOiBtYW51YWwgfHwgJycgfTsKfQpmdW5jdGlvbiBncm91cChuLCBpZCkgeyByZXR1cm4gbi5ncm91cHMuZmluZChmdW5jdGlvbihnKSB7IHJldHVybiBnLmlkID09PSBpZDsgfSk7IH0KCi8vIEE6IOOCq+ODkOODrOODg+OCuOS4jei2s++8iDTku7bkuK0x5Lu244Gu44G/5ZOB55uu44GC44KK77yJ4oaSIOS4jei2s+OCkuWHuuOBleOBquOBhAp7CiAgY29uc3QgZXhwZW5zZXMgPSBbCiAgICBleHAoJzIwMjYtMTAtMjUnLCAn44K544O844OR44O8JywgMjAwMCwgJ+mjn+iyuycpLAogICAgZXhwKCcyMDI2LTEwLTI3JywgJ+OCueODvOODkeODvCcsIDE1MDAsICfpo5/osrsnKSwKICAgIGV4cCgnMjAyNi0xMC0yOScsICfjgrnjg7zjg5Hjg7wnLCAxODAwLCAn6aOf6LK7JyksCiAgICBleHAoJzIwMjYtMTAtMzEnLCAn44K544O844OR44O8JywgMTIwMCwgJ+mjn+iyuycpLAogIF07CiAgY29uc3QgaXRlbXMgPSBbaXRlbSgnMjAyNi0xMC0yNScsICfjgrnjg7zjg5Hjg7wnLCAn6LGa44GT44G+JyldOwogIGNvbnN0IG4gPSBidWlsZE51dHJpdGlvbihleHBlbnNlcywgaXRlbXMsIFRPREFZKTsKICBjaGVjaygnQTogY292ZXJhZ2UgcmF0aW8nLCBuLmNvdmVyYWdlLnJhdGlvLCAwLjI1KTsKICBjaGVjaygnQTogZGVmaWNpdHMgZW1wdHknLCBuLmRlZmljaXRzLCBbXSk7Cn0KCi8vIEI6IOOCq+ODkOODrOODg+OCuOWNgeWIhuODu+mtmuOCvOODrSDihpIg6a2a44GM5LiN6LazMeS9jeOAguWQjOaXpeikh+aVsOihjOOBrzHml6XjgIHmlbDph48z5Lul5LiK44GvKzHml6Xoo5zmraMKewogIGNvbnN0IGV4cGVuc2VzID0gWwogICAgZXhwKCcyMDI2LTEwLTIwJywgJ+OCueODvOODkeODvCcsIDMwMDAsICfpo5/osrsnKSwKICAgIGV4cCgnMjAyNi0xMC0yNCcsICfjgrnjg7zjg5Hjg7wnLCAzMDAwLCAn6aOf6LK7JyksCiAgICBleHAoJzIwMjYtMTAtMjgnLCAn44K544O844OR44O8JywgMzAwMCwgJ+mjn+iyuycpLAogICAgZXhwKCcyMDI2LTExLTAxJywgJ+OCueODvOODkeODvCcsIDMwMDAsICfpo5/osrsnKSwKICBdOwogIGNvbnN0IGl0ZW1zID0gWwogICAgaXRlbSgnMjAyNi0xMC0yMCcsICfjgrnjg7zjg5Hjg7wnLCAn6LGa44GT44G+JyksIGl0ZW0oJzIwMjYtMTAtMjAnLCAn44K544O844OR44O8JywgJ+m2j+OCgOOBreiCiScpLCAvLyBtZWF0IOWQjOaXpTLooYwg4oaSIDHml6UKICAgIGl0ZW0oJzIwMjYtMTAtMjQnLCAn44K544O844OR44O8JywgJ+eJm+iCiScpLCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAvLyBtZWF0IDLml6Xnm64KICAgIGl0ZW0oJzIwMjYtMTAtMjAnLCAn44K544O844OR44O8JywgJ+OBu+OBhuOCjOOCk+iNiScpLCBpdGVtKCcyMDI2LTEwLTI0JywgJ+OCueODvOODkeODvCcsICfjgavjgpPjgZjjgpMnKSwKICAgIGl0ZW0oJzIwMjYtMTAtMjgnLCAn44K544O844OR44O8JywgJ+ODluODreODg+OCs+ODquODvCcpLCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAvLyB2ZWdfZ3JlZW4gM+aXpSA9IOWFhei2swogICAgaXRlbSgnMjAyNi0xMC0yMCcsICfjgrnjg7zjg5Hjg7wnLCAn57SN6LGGJywgMyksICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLy8gc295IOaVsOmHjzMg4oaSIDLml6XliIYKICAgIGl0ZW0oJzIwMjYtMTAtMjQnLCAn44K544O844OR44O8JywgJ+WNtScpLCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLy8gZWdnIDHml6UgPSDlhYXotrMKICAgIGl0ZW0oJzIwMjYtMTAtMjAnLCAn44K544O844OR44O8JywgJ+exsycpLCBpdGVtKCcyMDI2LTEwLTI4JywgJ+OCueODvOODkeODvCcsICfpo5/jg5Hjg7MnKSwgICAgICAgIC8vIHN0YXBsZSAy5pelID0g5YWF6LazCiAgICBpdGVtKCcyMDI2LTEwLTIwJywgJ+OCueODvOODkeODvCcsICfniZvkubMnKSwgaXRlbSgnMjAyNi0xMC0yOCcsICfjgrnjg7zjg5Hjg7wnLCAn44Oo44O844Kw44Or44OIJyksICAvLyBkYWlyeSAy5pelID0g5YWF6LazCiAgICBpdGVtKCcyMDI2LTEwLTI0JywgJ+OCueODvOODkeODvCcsICfjg5Djg4rjg4onKSwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLy8gZnJ1aXQgMeaXpSA9IOWFhei2swogICAgaXRlbSgnMjAyNi0xMC0yMCcsICfjgrnjg7zjg5Hjg7wnLCAn44KC44KE44GXJyksIGl0ZW0oJzIwMjYtMTAtMjQnLCAn44K544O844OR44O8JywgJ+OCreODo+ODmeODhCcpLAogICAgaXRlbSgnMjAyNi0xMS0wMScsICfjgrnjg7zjg5Hjg7wnLCAn54mb5LmzJyksIC8vIDExLTAx44Gu6LK344GE54mp44Gr44KC5ZOB55uu44GC44KK77yI44Kr44OQ44Os44OD44K455So77yJCiAgICBpdGVtKCcyMDI2LTEwLTI4JywgJ+OCueODvOODkeODvCcsICfnjonjga3jgY4nKSwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLy8gdmVnX290aGVyIDPml6UgPSDlhYXotrMKICBdOwogIGNvbnN0IG4gPSBidWlsZE51dHJpdGlvbihleHBlbnNlcywgaXRlbXMsIFRPREFZKTsKICBjaGVjaygnQjogY292ZXJhZ2UgcmF0aW8nLCBuLmNvdmVyYWdlLnJhdGlvLCAxKTsKICBjaGVjaygnQjogbWVhdCBkYXlzIChzYW1lLWRheSBkZWR1cCknLCBncm91cChuLCAnbWVhdCcpLmRheXMsIDIpOwogIGNoZWNrKCdCOiBzb3kgZGF5cyAoYnVsayBib251cyknLCBncm91cChuLCAnc295JykuZGF5cywgMik7CiAgY2hlY2soJ0I6IGZpc2ggc3RhdHVzJywgZ3JvdXAobiwgJ2Zpc2gnKS5zdGF0dXMsICd6ZXJvJyk7CiAgY2hlY2soJ0I6IGRlZmljaXRzWzBdIGlzIGZpc2gnLCBuLmRlZmljaXRzLmxlbmd0aCA+IDAgPyBuLmRlZmljaXRzWzBdLmlkIDogbnVsbCwgJ2Zpc2gnKTsKICBjaGVjaygnQjogZGVmaWNpdHMgbGVuZ3RoIDw9IDInLCBuLmRlZmljaXRzLmxlbmd0aCA8PSAyLCB0cnVlKTsKfQoKLy8gQzog5aSW6aOf44Gu44G/IOKGkiDkuI3otrPjgarjgZfjg7vlpJbpo5/ku7bmlbDjgaDjgZHoqJjpjLIKewogIGNvbnN0IGV4cGVuc2VzID0gWwogICAgZXhwKCcyMDI2LTEwLTI2JywgJ+mjn+WggicsIDkwMCwgJ+WklumjnycpLAogICAgZXhwKCcyMDI2LTEwLTMwJywgJ+ODqeODvOODoeODs+WxiycsIDExMDAsICflpJbpo58nKSwKICBdOwogIGNvbnN0IG4gPSBidWlsZE51dHJpdGlvbihleHBlbnNlcywgW10sIFRPREFZKTsKICBjaGVjaygnQzogZWF0aW5nT3V0Q291bnQnLCBuLmVhdGluZ091dENvdW50LCAyKTsKICBjaGVjaygnQzogZm9vZEV4cGVuc2VDb3VudCcsIG4uY292ZXJhZ2UuZm9vZEV4cGVuc2VDb3VudCwgMCk7CiAgY2hlY2soJ0M6IGRlZmljaXRzIGVtcHR5Jywgbi5kZWZpY2l0cywgW10pOwp9CgovLyBEOiDlgpnogIPjga7jgqvjg7Pjg57ljLrliIfjgorlk4Hnm67jgpLlj5bjgorovrzjgoAKewogIGNvbnN0IGV4cGVuc2VzID0gW2V4cCgnMjAyNi0xMC0zMScsICfjgrnjg7zjg5Hjg7wnLCAyNTAwLCAn6aOf6LK7JywgJ+exsyzosZrjgZPjgb4s44G744GG44KM44KT6I2JLOe0jeixhicpXTsKICBjb25zdCBuID0gYnVpbGROdXRyaXRpb24oZXhwZW5zZXMsIFtdLCBUT0RBWSk7CiAgY2hlY2soJ0Q6IHdpdGhJdGVtcyB2aWEgbm90ZScsIG4uY292ZXJhZ2Uud2l0aEl0ZW1zQ291bnQsIDEpOwogIGNoZWNrKCdEOiBzdGFwbGUgZGF5cycsIGdyb3VwKG4sICdzdGFwbGUnKS5kYXlzLCAxKTsKICBjaGVjaygnRDogc295IGRheXMnLCBncm91cChuLCAnc295JykuZGF5cywgMSk7CiAgLy8g6YCa5bi444Gu5paH56ug44Gu5YKZ6ICD44Gv5Y+W44KK6L6844G+44Gq44GECiAgY29uc3QgZXhwZW5zZXMyID0gW2V4cCgnMjAyNi0xMC0zMScsICfjgrnjg7zjg5Hjg7wnLCAyNTAwLCAn6aOf6LK7JywgJ+avjeOBqOiyt+OBhOeJqeOBq+ihjOOBo+OBnycpXTsKICBjb25zdCBuMiA9IGJ1aWxkTnV0cml0aW9uKGV4cGVuc2VzMiwgW10sIFRPREFZKTsKICBjaGVjaygnRDI6IHByb3NlIG5vdGUgaWdub3JlZCcsIG4yLmNvdmVyYWdlLndpdGhJdGVtc0NvdW50LCAwKTsKfQoKLy8gRTog5omL55u044GX77yI5YiG6aGe5YiX77yJ44GM6L6e5pu444KI44KK5YSq5YWI44GV44KM44KLCnsKICBjb25zdCBleHBlbnNlcyA9IFtleHAoJzIwMjYtMTAtMzEnLCAn44K544O844OR44O8JywgMjUwMCwgJ+mjn+iyuycpXTsKICBjb25zdCBpdGVtcyA9IFtpdGVtKCcyMDI2LTEwLTMxJywgJ+OCueODvOODkeODvCcsICfjgZTjgbzjgYbojLYnLCAxLCAnZmlzaCcpXTsKICBjb25zdCBuID0gYnVpbGROdXRyaXRpb24oZXhwZW5zZXMsIGl0ZW1zLCBUT0RBWSk7CiAgY2hlY2soJ0U6IG1hbnVhbCBvdmVycmlkZScsIGdyb3VwKG4sICdmaXNoJykuY291bnQsIDEpOwogIGNoZWNrKCdFOiB1bmNsYXNzaWZpZWQgZW1wdHknLCBuLnVuY2xhc3NpZmllZCwgW10pOwp9CgovLyBGOiDov5Tlk4HooYzjgavlr77lv5zjgZnjgovlk4Hnm67jga/okL3jgajjgZkgLyBHOiDnqpPjga7looPnlYwKewogIGNvbnN0IGV4cGVuc2VzID0gWwogICAgZXhwKCcyMDI2LTEwLTMxJywgJ+OCueODvOODkeODvCcsIDI1MDAsICfpo5/osrsnKSwKICAgIGV4cCgnMjAyNi0xMC0zMScsICfjgrnjg7zjg5Hjg7wnLCAtNTAwLCAn6aOf6LK7JyksCiAgXTsKICBjb25zdCBpdGVtcyA9IFtpdGVtKCcyMDI2LTEwLTMxJywgJ+OCueODvOODkeODvCcsICfosZrjgZPjgb4nKV07CiAgY29uc3QgbiA9IGJ1aWxkTnV0cml0aW9uKGV4cGVuc2VzLCBpdGVtcywgVE9EQVkpOwogIGNoZWNrKCdGOiByZXR1cm5lZCBpdGVtcyBkcm9wcGVkJywgZ3JvdXAobiwgJ21lYXQnKS5jb3VudCwgMCk7CgogIGNvbnN0IGl0ZW1zMiA9IFsKICAgIGl0ZW0oJzIwMjYtMTAtMTgnLCAn44K544O844OR44O8JywgJ+ixmuOBk+OBvicpLCAvLyDnqpPjga7liY3ml6Ug4oaSIOWvvuixoeWklgogICAgaXRlbSgnMjAyNi0xMC0xOScsICfjgrnjg7zjg5Hjg7wnLCAn6LGa44GT44G+JyksIC8vIOeqk+OBruWIneaXpSDihpIg5a++6LGhCiAgXTsKICBjb25zdCBuMiA9IGJ1aWxkTnV0cml0aW9uKFtleHAoJzIwMjYtMTAtMTknLCAn44K544O844OR44O8JywgMTAwMCwgJ+mjn+iyuycpXSwgaXRlbXMyLCBUT0RBWSk7CiAgY2hlY2soJ0c6IHdpbmRvdyBib3VuZGFyeScsIGdyb3VwKG4yLCAnbWVhdCcpLmNvdW50LCAxKTsKfQoKY29uc29sZS5sb2coJ1xuJyArIHBhc3NlZCArICcgcGFzc2VkLCAnICsgZmFpbGVkICsgJyBmYWlsZWQnKTsKcHJvY2Vzcy5leGl0KGZhaWxlZCA+IDAgPyAxIDogMCk7Cg==
+/**
+ * 栄養推測ロジックのローカルテスト。
+ * gas/Code.gs の「栄養推測 (pure)」区間を抽出して Node で実行する。
+ * 実行: node tests/nutrition.test.js
+ */
+const fs = require('fs');
+const vm = require('vm');
+const path = require('path');
+
+const code = fs.readFileSync(path.join(__dirname, '..', 'gas', 'Code.gs'), 'utf8');
+const start = code.indexOf('// ===== 栄養推測 (pure) START =====');
+const end = code.indexOf('// ===== 栄養推測 (pure) END =====');
+if (start === -1 || end === -1) {
+  console.error('FAIL: pure区間のマーカーが見つかりません');
+  process.exit(1);
+}
+const pure = code.slice(start, end);
+const sandbox = {};
+vm.createContext(sandbox);
+vm.runInContext(pure + '\n;this.__exp = { classifyFoodItem, buildNutrition };', sandbox);
+const { classifyFoodItem, buildNutrition } = sandbox.__exp;
+
+let passed = 0, failed = 0;
+function check(label, actual, expected) {
+  const a = JSON.stringify(actual), e = JSON.stringify(expected);
+  if (a === e) { passed++; }
+  else { failed++; console.log('FAIL: ' + label + '\n  expected: ' + e + '\n  actual:   ' + a); }
+}
+
+// ---- 分類テスト（仕様書 §4.4 + 紛らわしいケース） ----
+const classifyCases = [
+  ['国産豚こま切れ 300g', 'meat'],
+  ['サバ水煮缶', 'fish'],
+  ['絹ごし豆腐', 'soy'],
+  ['納豆 3パック', 'soy'],
+  ['豆乳 1000ml', 'soy'],
+  ['牛乳 1000ml', 'dairy'],
+  ['牛肉切り落とし', 'meat'],
+  ['冷凍ほうれん草', 'veg_green'],
+  ['ブロッコリー', 'veg_green'],
+  ['もやし', 'veg_other'],
+  ['わかめ', 'veg_other'],
+  ['バナナ', 'fruit'],
+  ['卵 10個', 'egg'],
+  ['米 5kg', 'staple'],
+  ['幕の内弁当', 'composite'],
+  ['カップヌードル', 'composite'],
+  ['卵サンド', 'composite'],
+  ['洗濯洗剤', 'excluded'],
+  ['しょうゆ', 'excluded'],
+  ['ポテトチップス', 'excluded'],
+  // 紛らわしいケース
+  ['サラダチキン', 'meat'],
+  ['魚肉ソーセージ', 'composite'],
+  ['味噌汁', 'composite'],
+  ['味噌', 'excluded'],
+  ['カキフライ', 'composite'],
+  ['ツナ缶', 'fish'],
+  ['ヨーグルト', 'dairy'],
+  ['鶏むね肉', 'meat'],
+  ['にんじん', 'veg_green'],
+  ['キャベツ', 'veg_other'],
+  ['ｻﾊﾞ缶', 'fish'], // 半角カナ→全角化
+  ['ごぼう茶', 'excluded'],
+  // 実データ（2026-10月分）で見つかった未分類の潰し込み
+  ['イリゴマシロ', 'excluded'],
+  ['コールスローサラダ', 'composite'],
+  ['［定食］さばの炭火焼き', 'composite'],
+  ['さばの塩焼き', 'fish'],
+  ['アヤタカ 650ml', 'excluded'],
+  ['一番搾り', 'excluded'],
+  ['会員値引・税調整', 'excluded'],
+  ['サラダ油', 'excluded'],
+  ['ごま豆腐', 'soy'],
+  ['完全メシ トムヤムライス', 'composite'],
+  ['塩鮭', 'fish'],
+  ['だし巻き卵', 'egg'],
+  ['食塩', 'excluded'],
+];
+classifyCases.forEach(function([name, expected]) {
+  check('classify: ' + name, classifyFoodItem(name), expected);
+});
+
+// ---- 集計テスト ----
+const TODAY = '2026-11-01'; // 窓は 2026-10-19 〜 2026-11-01
+function exp(date, store, amount, category, note) {
+  return { date, store, amount, category, note: note || '' };
+}
+function item(date, store, name, qty, manual) {
+  return { date, store, name, qty: qty || 1, manual: manual || '' };
+}
+function group(n, id) { return n.groups.find(function(g) { return g.id === id; }); }
+
+// A: カバレッジ不足（4件中1件のみ品目あり）→ 不足を出さない
+{
+  const expenses = [
+    exp('2026-10-25', 'スーパー', 2000, '食費'),
+    exp('2026-10-27', 'スーパー', 1500, '食費'),
+    exp('2026-10-29', 'スーパー', 1800, '食費'),
+    exp('2026-10-31', 'スーパー', 1200, '食費'),
+  ];
+  const items = [item('2026-10-25', 'スーパー', '豚こま')];
+  const n = buildNutrition(expenses, items, TODAY);
+  check('A: coverage ratio', n.coverage.ratio, 0.25);
+  check('A: deficits empty', n.deficits, []);
+}
+
+// B: カバレッジ十分・魚ゼロ → 魚が不足1位。同日複数行は1日、数量3以上は+1日補正
+{
+  const expenses = [
+    exp('2026-10-20', 'スーパー', 3000, '食費'),
+    exp('2026-10-24', 'スーパー', 3000, '食費'),
+    exp('2026-10-28', 'スーパー', 3000, '食費'),
+    exp('2026-11-01', 'スーパー', 3000, '食費'),
+  ];
+  const items = [
+    item('2026-10-20', 'スーパー', '豚こま'), item('2026-10-20', 'スーパー', '鶏むね肉'), // meat 同日2行 → 1日
+    item('2026-10-24', 'スーパー', '牛肉'),                                              // meat 2日目
+    item('2026-10-20', 'スーパー', 'ほうれん草'), item('2026-10-24', 'スーパー', 'にんじん'),
+    item('2026-10-28', 'スーパー', 'ブロッコリー'),                                        // veg_green 3日 = 充足
+    item('2026-10-20', 'スーパー', '納豆', 3),                                             // soy 数量3 → 2日分
+    item('2026-10-24', 'スーパー', '卵'),                                                  // egg 1日 = 充足
+    item('2026-10-20', 'スーパー', '米'), item('2026-10-28', 'スーパー', '食パン'),        // staple 2日 = 充足
+    item('2026-10-20', 'スーパー', '牛乳'), item('2026-10-28', 'スーパー', 'ヨーグルト'),  // dairy 2日 = 充足
+    item('2026-10-24', 'スーパー', 'バナナ'),                                              // fruit 1日 = 充足
+    item('2026-10-20', 'スーパー', 'もやし'), item('2026-10-24', 'スーパー', 'キャベツ'),
+    item('2026-11-01', 'スーパー', '牛乳'), // 11-01の買い物にも品目あり（カバレッジ用）
+    item('2026-10-28', 'スーパー', '玉ねぎ'),                                              // veg_other 3日 = 充足
+  ];
+  const n = buildNutrition(expenses, items, TODAY);
+  check('B: coverage ratio', n.coverage.ratio, 1);
+  check('B: meat days (same-day dedup)', group(n, 'meat').days, 2);
+  check('B: soy days (bulk bonus)', group(n, 'soy').days, 2);
+  check('B: fish status', group(n, 'fish').status, 'zero');
+  check('B: deficits[0] is fish', n.deficits.length > 0 ? n.deficits[0].id : null, 'fish');
+  check('B: deficits length <= 2', n.deficits.length <= 2, true);
+}
+
+// C: 外食のみ → 不足なし・外食件数だけ記録
+{
+  const expenses = [
+    exp('2026-10-26', '食堂', 900, '外食'),
+    exp('2026-10-30', 'ラーメン屋', 1100, '外食'),
+  ];
+  const n = buildNutrition(expenses, [], TODAY);
+  check('C: eatingOutCount', n.eatingOutCount, 2);
+  check('C: foodExpenseCount', n.coverage.foodExpenseCount, 0);
+  check('C: deficits empty', n.deficits, []);
+}
+
+// D: 備考のカンマ区切り品目を取り込む
+{
+  const expenses = [exp('2026-10-31', 'スーパー', 2500, '食費', '米,豚こま,ほうれん草,納豆')];
+  const n = buildNutrition(expenses, [], TODAY);
+  check('D: withItems via note', n.coverage.withItemsCount, 1);
+  check('D: staple days', group(n, 'staple').days, 1);
+  check('D: soy days', group(n, 'soy').days, 1);
+  // 通常の文章の備考は取り込まない
+  const expenses2 = [exp('2026-10-31', 'スーパー', 2500, '食費', '母と買い物に行った')];
+  const n2 = buildNutrition(expenses2, [], TODAY);
+  check('D2: prose note ignored', n2.coverage.withItemsCount, 0);
+}
+
+// E: 手直し（分類列）が辞書より優先される
+{
+  const expenses = [exp('2026-10-31', 'スーパー', 2500, '食費')];
+  const items = [item('2026-10-31', 'スーパー', 'ごぼう茶', 1, 'fish')];
+  const n = buildNutrition(expenses, items, TODAY);
+  check('E: manual override', group(n, 'fish').count, 1);
+  check('E: unclassified empty', n.unclassified, []);
+}
+
+// F: 返品行に対応する品目は落とす / G: 窓の境界
+{
+  const expenses = [
+    exp('2026-10-31', 'スーパー', 2500, '食費'),
+    exp('2026-10-31', 'スーパー', -500, '食費'),
+  ];
+  const items = [item('2026-10-31', 'スーパー', '豚こま')];
+  const n = buildNutrition(expenses, items, TODAY);
+  check('F: returned items dropped', group(n, 'meat').count, 0);
+
+  const items2 = [
+    item('2026-10-18', 'スーパー', '豚こま'), // 窓の前日 → 対象外
+    item('2026-10-19', 'スーパー', '豚こま'), // 窓の初日 → 対象
+  ];
+  const n2 = buildNutrition([exp('2026-10-19', 'スーパー', 1000, '食費')], items2, TODAY);
+  check('G: window boundary', group(n2, 'meat').count, 1);
+}
+
+console.log('\n' + passed + ' passed, ' + failed + ' failed');
+process.exit(failed > 0 ? 1 : 0);
